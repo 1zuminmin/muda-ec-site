@@ -3,7 +3,7 @@
   const M = window.Muda, dialog = document.getElementById('purchase-dialog'), content = document.getElementById('dialog-content');
   let busy = false;
   const productList = document.getElementById('shop-products');
-  if (productList) productList.innerHTML = M.products.map((p, i) => M.card(p, i, true)).join('');
+  if (productList) productList.innerHTML = M.regularProducts.map((p, i) => M.card(p, i, true)).join('');
   const open = () => { if (!dialog.open) dialog.showModal(); document.body.classList.add('modal-open'); };
   const close = () => { if (!busy) dialog.close(); };
   dialog.querySelector('.dialog-close').addEventListener('click', close);
@@ -27,7 +27,8 @@
     try {
       const result = M.buy(p.id);
       content.innerHTML = `<div class="success-seal" aria-hidden="true">✓</div><p class="eyebrow">A PERFECTLY USELESS PURCHASE</p><h2 id="dialog-title" tabindex="-1">見事な無駄遣いです。</h2><p class="success-message">この度は弊社の商品をお買い上げいただき、誠にありがとうございます。お客様の架空の資産が、何の役にも立たないものへと変換されましたことを心よりお祝い申し上げます。</p><blockquote>${p.message}</blockquote><div class="receipt"><div><span>${p.name}</span><strong>${M.money(p.price)} <small>架空</small></strong></div></div><p class="dialog-note">架空の購入・実際の支払いなし</p><button class="button gold full" id="download-certificate">無駄遣い認定証を保存する ↓</button><a class="button outline full share-link" href="${M.shareURL(result.purchase)}" target="_blank" rel="noopener noreferrer">Xでこの無駄を共有 ↗</a><button class="cancel-button" id="continue-shopping">お買い物を続ける</button><p class="fine">認定証はPNG形式です。Xへの画像添付は手動で行ってください。</p>`;
-      if (result.completedNow) content.insertAdjacentHTML('afterbegin', `<div class="completion-announcement"><p class="eyebrow">COLLECTION COMPLETE</p><p>${M.completionText}</p><button class="text-link" data-download-completion>全商品購入の感謝状を保存 ↓</button></div>`);
+      if (result.invitationNow) content.insertAdjacentHTML('afterbegin', '<div class="completion-announcement"><p class="eyebrow">A PRIVATE INVITATION</p><p>お得意様への特別なご案内です。</p><p>通常9品のお買い上げに感謝を込めて、最後の一品をご用意いたしました。</p><a class="text-link" href="shop.html#private-collection">特別なご案内を開く ↗</a></div>');
+      if (result.completedNow) content.insertAdjacentHTML('afterbegin', `<div class="completion-announcement"><p class="eyebrow">COMPLETE, AT LAST</p><p>${M.completionText}</p><button class="text-link" data-download-completion>完全クリアの感謝状を保存 ↓</button></div>`);
       document.getElementById('download-certificate').onclick = () => download(result.purchase);
       document.getElementById('continue-shopping').onclick = close;
       M.notifyAchievements(result.newly);
@@ -48,9 +49,9 @@
   document.getElementById('purchase-history')?.addEventListener('click', e => { const button = e.target.closest('[data-certificate]'); if (button) { const p = M.state().history.find(p => p.id === button.dataset.certificate); if (p) download(p); } });
   function manage(type) {
     const deleting = type === 'delete';
-    content.innerHTML = `<p class="eyebrow">YOUR ACCOUNT</p><h2 id="dialog-title">${deleting ? 'すべての記録を削除しますか。' : '所持金をリセットしますか。'}</h2><p class="success-message">${deleting ? '購入履歴・累計額・内職・丁半・実績・会員状態・感謝状をすべて削除し、所持金を10,000円に戻します。この操作は取り消せません。' : '所持金を10,000円に戻します。購入・内職・丁半・実績・会員・感謝状の記録はそのまま残ります。'}</p><button class="button ${deleting ? 'danger' : 'gold'} full" id="confirm-management">${deleting ? 'すべての記録を削除する' : '所持金を10,000円に戻す'}</button><button class="cancel-button" id="cancel-management" autofocus>キャンセル</button>`;
+    content.innerHTML = `<p class="eyebrow">YOUR ACCOUNT</p><h2 id="dialog-title">${deleting ? 'すべての記録を削除しますか。' : '所持金をリセットしますか。'}</h2><p class="success-message">${deleting ? '購入履歴・累計額・内職・実績・会員状態・感謝状をすべて削除し、所持金を0円に戻します。この操作は取り消せません。' : '所持金を0円に戻します。購入・内職・実績・会員・感謝状の記録はそのまま残ります。'}</p><button class="button ${deleting ? 'danger' : 'gold'} full" id="confirm-management">${deleting ? 'すべての記録を削除する' : '所持金を0円に戻す'}</button><button class="cancel-button" id="cancel-management" autofocus>キャンセル</button>`;
     open(); document.getElementById('cancel-management').onclick = close;
-    document.getElementById('confirm-management').onclick = () => { deleting ? M.clear() : M.resetBalance(); close(); M.toast(deleting ? 'すべての記録を削除しました。' : '架空の所持金を10,000円に戻しました。'); };
+    document.getElementById('confirm-management').onclick = () => { deleting ? M.clear() : M.resetBalance(); close(); M.toast(deleting ? 'すべての記録を削除しました。' : '架空の所持金を0円に戻しました。'); };
   }
   document.getElementById('reset-balance')?.addEventListener('click', () => manage('reset'));
   document.getElementById('delete-records')?.addEventListener('click', () => manage('delete'));

@@ -1,48 +1,61 @@
 (() => {
   'use strict';
-  const M = window.Muda, form = document.getElementById('dice-form'), result = document.getElementById('dice-result');
-  let rolling = false;
+  const M = window.Muda, envelope = document.getElementById('envelope-action');
+  let gesture = null, suppressClick = false;
   function render() {
-    const s = M.state();
+    const s = M.state(), sealed = s.workPhase === 'peel';
     document.getElementById('work-count').textContent = s.workCount.toLocaleString('ja-JP');
     document.getElementById('work-earned').textContent = M.money(s.earnedTotal);
-    document.getElementById('dice-history').innerHTML = s.rounds.length ? `<div class="round-list">${s.rounds.map(r => `<div class="round-row"><time datetime="${r.date}">${new Date(r.date).toLocaleString('ja-JP')}</time><span>${r.choice === 'cho' ? '丁' : '半'}に ${M.money(r.stake)}</span><span>${r.die1} + ${r.die2} = ${r.die1 + r.die2}</span><strong class="${r.won ? 'win' : 'loss'}">${r.won ? '+' : '−'}${M.money(r.stake)}</strong></div>`).join('')}</div>` : '<div class="quiet-empty">まだ、運を試していません。内職だけでもお楽しみいただけます。</div>';
+    document.getElementById('work-rate').textContent = M.money(M.workRate(s));
+    document.getElementById('work-plan').textContent = M.plans.find(p => p.id === s.membership?.planId)?.name || '未入会';
+    document.getElementById('work-phase').textContent = sealed ? '02 / PEEL' : '01 / SEAL';
+    document.getElementById('work-instruction').textContent = sealed ? '今の糊を、丁寧に剥がしてください。' : '糊を塗って、封をしてください。';
+    document.getElementById('gesture-hint').textContent = sealed ? '封筒を上へなぞるか、もう一度タップしてください。' : '封筒を右へなぞるか、タップしてください。';
+    envelope.dataset.phase = s.workPhase;
+    envelope.setAttribute('aria-label', sealed ? '封筒の糊を剥がして報酬を受け取る' : '封筒に糊を塗って閉じる');
+    document.getElementById('work-button').innerHTML = sealed ? `糊を剥がして元に戻す <span>+ ${M.money(M.workRate(s))}</span>` : '糊を塗って封をする <span>01 / 02</span>';
   }
-  document.getElementById('work-button').addEventListener('click', () => {
+  function act(phase = M.state().workPhase) {
     try {
-      const r = M.work(); if (!r) return;
-      document.getElementById('work-result').textContent = `一通、完成いたしました。 + ${M.money(r.amount)}（架空）`;
-      const envelope = document.querySelector('.envelope');
-      envelope.classList.remove('stamped'); void envelope.offsetWidth; envelope.classList.add('stamped');
+      const r = M.workStep(phase); if (!r) return;
+      document.getElementById('work-result').textContent = r.amount ? `元どおりになりました。何も進んでいません。 + ${M.money(r.amount)}（架空）` : 'しっかり閉じました。次は、その糊を剥がしてください。';
       M.notifyAchievements(r.newly);
-    } catch (e) { M.toast('作業を完了できませんでした。', e.message); }
-  });
-  function showRound(r) {
-    if (!r) return;
-    document.getElementById('die-one').textContent = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][r.die1 - 1];
-    document.getElementById('die-one').setAttribute('aria-label', `一つ目 ${r.die1}`);
-    document.getElementById('die-two').textContent = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][r.die2 - 1];
-    document.getElementById('die-two').setAttribute('aria-label', `二つ目 ${r.die2}`);
-    const parity = (r.die1 + r.die2) % 2 === 0 ? '丁' : '半';
-    result.className = 'dice-result ' + (r.won ? 'win' : 'loss');
-    result.textContent = `${r.die1} + ${r.die2} = ${r.die1 + r.die2}、${parity}。${r.won ? `的中です。${M.money(r.stake * 2)}を受け取り、差し引き +${M.money(r.stake)}。` : `残念。${M.money(r.stake)}の掛け金は戻りません。`}（すべて架空）`;
+    } catch (e) { M.toast('作業手順をご確認ください。', e.message); render(); }
   }
-  form.addEventListener('submit', async e => {
-    e.preventDefault(); if (rolling) return;
-    try {
-      const stake = Number(document.getElementById('stake').value), choice = new FormData(form).get('choice');
-      M.startRound(stake, choice);
-      rolling = true; [...form.elements].forEach(el => el.disabled = true);
-      document.getElementById('dice-stage').classList.add('rolling');
-      result.textContent = 'さいころを、丁寧に転がしております。';
-      await new Promise(resolve => setTimeout(resolve, matchMedia('(prefers-reduced-motion: reduce)').matches ? 100 : 1000));
-      showRound(M.settleRound());
-    } catch (e) { result.textContent = e.message; }
-    finally { rolling = false; [...form.elements].forEach(el => el.disabled = false); document.getElementById('dice-stage').classList.remove('rolling'); }
+  document.getElementById('work-button').addEventListener('click', () => act());
+  envelope.addEventListener('click', e => {
+    if (e.detail !== 0 && suppressClick) { suppressClick = false; return; }
+    act();
   });
-  // A committed round survives navigation/reload and is settled exactly once.
-  const pending = M.state().pendingRound;
-  if (pending) showRound(M.settleRound());
-  else if (M.state().rounds.length) showRound(M.state().rounds[0]);
+  envelope.addEventListener('pointerdown', e => {
+    if (!e.isPrimary || e.button !== 0 || gesture) return;
+    suppressClick = false;
+    const rect = envelope.getBoundingClientRect();
+    gesture = { id: e.pointerId, x: e.clientX, y: e.clientY, phase: M.state().workPhase, width: rect.width, height: rect.height, progress: 0 };
+    envelope.setPointerCapture(e.pointerId);
+  });
+  envelope.addEventListener('pointermove', e => {
+    if (!gesture || gesture.id !== e.pointerId) return;
+    const distance = gesture.phase === 'seal' ? e.clientX - gesture.x : gesture.y - e.clientY;
+    const required = gesture.phase === 'seal' ? gesture.width * .45 : gesture.height * .35;
+    gesture.progress = Math.max(0, Math.min(1, distance / required));
+    envelope.style.setProperty('--gesture-progress', gesture.progress);
+  });
+  function release(e, canceled = false) {
+    if (!gesture || gesture.id !== e.pointerId) return;
+    const g = gesture, movement = Math.hypot(e.clientX - g.x, e.clientY - g.y);
+    gesture = null;
+    if (envelope.hasPointerCapture(e.pointerId)) envelope.releasePointerCapture(e.pointerId);
+    envelope.style.removeProperty('--gesture-progress');
+    if (canceled) { suppressClick = true; return; }
+    if (movement >= 12) {
+      suppressClick = true;
+      if (g.progress >= 1 && M.state().workPhase === g.phase) act(g.phase);
+    }
+    // Short movements are handled by the native click event (tap or keyboard).
+  }
+  envelope.addEventListener('pointerup', e => release(e));
+  envelope.addEventListener('pointercancel', e => release(e, true));
+  envelope.addEventListener('lostpointercapture', () => { gesture = null; envelope.style.removeProperty('--gesture-progress'); });
   render(); window.addEventListener('muda:update', render);
 })();

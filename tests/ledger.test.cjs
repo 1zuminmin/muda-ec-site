@@ -1,99 +1,109 @@
-/* Optional development checks: node --test tests/ledger.test.cjs */
+/* Optional development checks: node --test tests/*.test.cjs */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
-const { webcrypto } = require('node:crypto');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../js/storage.js'), 'utf8');
 const KEY = 'muda-shokai:v1';
-function boot({ map = new Map(), blocked = false, random = null, now = Date.now() } = {}) {
+function boot({ map = new Map(), blocked = false, now = Date.now() } = {}) {
   let clock = now;
   class Clock extends Date { constructor(...args) { super(...(args.length ? args : [clock])); } static now() { return clock; } }
   const window = new EventTarget();
-  const crypto = random ? { getRandomValues(array) { array[0] = random.shift() ?? 1; return array; } } : webcrypto;
-  vm.runInContext(source, vm.createContext({ window, CustomEvent, structuredClone, crypto, Date: Clock, localStorage: {
+  vm.runInContext(source, vm.createContext({ window, CustomEvent, structuredClone, crypto: require('node:crypto').webcrypto, Date: Clock, localStorage: {
     getItem(k) { if (blocked) throw Error('denied'); return map.get(k) ?? null; },
     setItem(k, v) { if (blocked) throw Error('quota'); map.set(k, v); },
     removeItem(k) { if (blocked) throw Error('denied'); map.delete(k); }
   } }));
   return { m: window.Muda, map, advance(ms = 200) { clock += ms; } };
 }
-function legacy() {
-  return { version: 1, balance: 8600, totalSpent: 1400, history: ['stone', 'dot', 'void'].map((productId, i) => ({ productId, price: [100, 300, 1000][i], id: `MS-OLD-${i}`, date: '2026-11-01T00:00:00.000Z' })), unlocked: ['first', 'planned', 'return', 'collection'], lastUsed: '2026-11-01T00:00:00.000Z' };
+function legacy(version = 1) {
+  const s = { version, balance: 8600, totalSpent: 1400, history: ['stone', 'dot', 'void'].map((productId, i) => ({ productId, price: [100, 300, 1000][i], id: `MS-OLD-${i}`, date: '2026-11-01T00:00:00.000Z' })), unlocked: ['first', 'planned', 'return', 'collection'], lastUsed: '2026-11-01T00:00:00.000Z' };
+  if (version === 2) Object.assign(s, { workCount: 2, earnedTotal: 20, workLastAt: 0, membership: null, rounds: [], pendingRound: null, completion: null });
+  return s;
 }
-test('new ledger has 9 products, 8 honors, free memberships and 10,000 yen', () => {
-  const { m } = boot(); assert.equal(m.products.length, 9); assert.equal(m.achievements.length, 8); assert.equal(m.plans.length, 3); assert.equal(m.state().balance, 10000); assert.equal(m.state().membership, null);
+function cycle(b) { const seal = b.m.workStep('seal'); b.advance(); const peel = b.m.workStep('peel'); b.advance(); return { seal, peel }; }
+function earn(b, amount) { while (b.m.state().balance < amount) cycle(b); }
+function collectRegular(b) { b.m.join('black'); let last; for (const p of b.m.regularProducts) { earn(b, p.price); last = b.m.buy(p.id); } return last; }
+test('new game starts at zero, with nine visible products and no gambling API', () => {
+  const { m } = boot(); assert.equal(m.state().balance, 0); assert.equal(m.state().version, 3); assert.equal(m.visibleProducts().length, 9); assert.equal(m.specialUnlocked(), false); assert.equal(m.startRound, undefined); assert.equal(m.settleRound, undefined);
 });
-test('v1 migration keeps original money, purchases and achievements', () => {
+test('sealing pays nothing; peeling restores the envelope and pays once', () => {
+  const b = boot(), { m } = b; const seal = m.workStep('seal');
+  assert.equal(seal.amount, 0); assert.equal(m.state().balance, 0); assert.equal(m.state().workPhase, 'peel'); assert.equal(m.state().workCount, 0);
+  b.advance(); const peel = m.workStep('peel'); assert.equal(peel.amount, 10); assert.equal(m.state().balance, 10); assert.equal(m.state().workPhase, 'seal'); assert.equal(m.state().workCount, 1);
+  assert.throws(() => m.workStep('peel')); assert.equal(m.state().balance, 10);
+});
+test('rapid input and wrong order cannot skip a stage or double-pay', () => {
+  const { m, advance } = boot(); assert.throws(() => m.workStep('peel')); assert.throws(() => m.workStep('invalid')); m.workStep('seal');
+  assert.equal(m.workStep('peel'), null); assert.equal(m.state().balance, 0); advance(); m.workStep('peel'); assert.equal(m.workStep('seal'), null); assert.equal(m.state().balance, 10);
+});
+test('in-progress work survives reload without paying or resealing', () => {
+  const { m, map, advance } = boot(); m.workStep('seal'); advance();
+  const next = boot({ map, now: Date.now() + 1000 }).m; assert.equal(next.state().workPhase, 'peel'); assert.equal(next.state().balance, 0); assert.throws(() => next.workStep('seal')); next.workStep('peel'); assert.equal(next.state().balance, 10);
+});
+test('all membership ranks raise the round-trip rate and remain free', () => {
+  const b = boot(), { m } = b; let expected = 0;
+  for (const [planId, rate] of [['ordinary', 20], ['gold', 50], ['black', 100]]) {
+    const before = m.state().balance; m.join(planId); assert.equal(m.state().balance, before); assert.equal(m.workRate(), rate); assert.equal(cycle(b).peel.amount, rate); expected += rate;
+  }
+  assert.equal(m.state().earnedTotal, expected); assert.equal(m.state().totalSpent, 0); m.leave(); assert.equal(m.workRate(), 10); assert.equal(cycle(b).peel.amount, 10);
+});
+test('the plan at completion controls payment even if changed mid-envelope', () => {
+  const b = boot(), { m } = b; m.workStep('seal'); m.join('black'); b.advance(); assert.equal(m.workStep('peel').amount, 100);
+  b.advance(); m.workStep('seal'); m.leave(); b.advance(); assert.equal(m.workStep('peel').amount, 10);
+});
+test('worker honor unlocks once and purchases keep earned totals separate', () => {
+  const b = boot(); b.m.join('black'); const r = cycle(b); assert.deepEqual(Array.from(r.peel.newly, a => a.id), ['worker']); assert.equal(cycle(b).peel.newly.length, 0); b.m.buy('stone');
+  assert.equal(b.m.state().totalSpent, 100); assert.equal(b.m.state().earnedTotal, 200); assert.equal(b.m.state().balance, 100);
+});
+test('hidden product cannot be viewed or bought before all nine ordinary products', () => {
+  const b = boot(); b.m.join('black'); earn(b, 20000); const before = JSON.stringify(b.m.state());
+  assert.equal(b.m.canView('final-envelope'), false); assert.throws(() => b.m.buy('final-envelope'), /ご案内/); assert.equal(JSON.stringify(b.m.state()), before);
+  b.m.buy('stone'); assert.equal(b.m.specialUnlocked(), false);
+});
+test('repeated copies do not count as different regular products', () => {
+  const b = boot(); b.m.join('black'); earn(b, 1000); for (let i = 0; i < 9; i++) b.m.buy('stone');
+  assert.equal(b.m.regularCount(), 1); assert.equal(b.m.visibleProducts().length, 9); assert.equal(b.m.state().completion, null);
+});
+test('ninth distinct product unlocks the invitation once but does not complete game', () => {
+  const b = boot(), last = collectRegular(b);
+  assert.equal(last.invitationNow, true); assert.equal(last.completedNow, false); assert.equal(b.m.state().completion, null); assert.equal(b.m.state().standardCompletion.totalSpent, 14200); assert.equal(b.m.visibleProducts().length, 10); assert.equal(b.m.canView('final-envelope'), true);
+  earn(b, 100); assert.equal(b.m.buy('stone').invitationNow, false);
+});
+test('secret costs 20,000 and completes only after an affordable purchase', () => {
+  const b = boot(); collectRegular(b); assert.throws(() => b.m.buy('final-envelope'), /不足/); assert.equal(b.m.state().completion, null);
+  earn(b, 20000); const r = b.m.buy('final-envelope'); assert.equal(r.purchase.price, 20000); assert.equal(r.completedNow, true); assert.equal(b.m.state().completion.totalSpent, 34200); assert.equal(b.m.state().completion.count, 10); assert.equal(b.m.state().unlocked.includes('complete'), true); assert.equal(b.m.state().completion.number, undefined);
+});
+test('complete snapshot persists across reload and does not issue twice', () => {
+  const b = boot(); collectRegular(b); earn(b, 20000); b.m.buy('final-envelope'); const completed = JSON.stringify(b.m.state().completion);
+  earn(b, 20000); assert.equal(b.m.buy('final-envelope').completedNow, false); assert.equal(JSON.stringify(boot({ map: b.map }).m.state().completion), completed);
+});
+test('v1 migration preserves the user balance and original purchase records', () => {
   const map = new Map([[KEY, JSON.stringify(legacy())]]), { m } = boot({ map });
-  assert.equal(m.state().version, 2); assert.equal(m.state().balance, 8600); assert.equal(m.state().totalSpent, 1400); assert.equal(m.state().history.length, 3); assert.equal(m.state().unlocked.length, 4); assert.equal(m.state().earnedTotal, 0); assert.equal(m.corrupt, false);
+  assert.equal(m.state().version, 3); assert.equal(m.state().balance, 8600); assert.equal(m.state().totalSpent, 1400); assert.equal(m.state().history.length, 3); assert.equal(m.corrupt, false);
 });
-test('work adds money, throttles rapid clicks, and keeps spending separate', () => {
-  const { m, advance } = boot(); assert.equal(m.work().amount, 10); assert.equal(m.work(), null); advance(); m.work();
-  assert.equal(m.state().balance, 10020); assert.equal(m.state().earnedTotal, 20); assert.equal(m.state().workCount, 2); assert.equal(m.state().totalSpent, 0);
+test('v2 keeps earnings and membership, retires old rounds and settles pending win once', () => {
+  const s = legacy(2); s.membership = { planId: 'gold', since: s.lastUsed }; s.pendingRound = { stake: 500, die1: 1, die2: 1, choice: 'cho', won: true };
+  const map = new Map([[KEY, JSON.stringify(s)]]), { m } = boot({ map });
+  assert.equal(m.state().balance, 9600); assert.equal(m.state().earnedTotal, 20); assert.equal(m.workRate(), 50); assert.equal(m.state().rounds, undefined); assert.equal(m.state().pendingRound, undefined); assert.equal(boot({ map }).m.state().balance, 9600);
 });
-test('work honor unlocks once after 100 earned yen', () => {
-  const { m, advance } = boot(); let unlocked = [];
-  for (let i = 0; i < 12; i++) { unlocked.push(...m.work().newly.map(a => a.id)); advance(); }
-  assert.deepEqual(unlocked, ['worker']);
+test('old nine-product completion becomes a preserved ordinary collection milestone', () => {
+  const { m } = boot(), s = legacy(2); s.history = m.regularProducts.map((p, i) => ({ id: `OLD-${i}`, productId: p.id, price: p.price, date: s.lastUsed })); s.totalSpent = 14200; s.unlocked.push('complete'); s.completion = { date: s.lastUsed, totalSpent: 14200, count: 9 };
+  const b = boot({ map: new Map([[KEY, JSON.stringify(s)]]) }); assert.equal(b.m.state().completion, null); assert.equal(b.m.state().standardCompletion.date, s.lastUsed); assert.equal(b.m.specialUnlocked(), true); assert.equal(b.m.state().unlocked.includes('complete'), false); assert.equal(b.m.state().unlocked.includes('regular'), true);
 });
-test('winning cho pays exactly twice the stake after stake deduction', () => {
-  const { m } = boot({ random: [0, 0] }); const r = m.startRound(500, 'cho');
-  assert.equal(r.die1, 1); assert.equal(r.die2, 1); assert.equal(r.won, true); assert.equal(m.state().balance, 9500);
-  assert.equal(m.settleRound().won, true); assert.equal(m.state().balance, 10500); assert.equal(m.state().totalSpent, 0); assert.equal(m.state().earnedTotal, 0);
+test('zeroing funds preserves history, earnings, membership and work phase', () => {
+  const b = boot(); b.m.join('black'); earn(b, 200); b.m.buy('stone'); b.m.workStep('seal'); b.m.resetBalance();
+  assert.equal(b.m.state().balance, 0); assert.equal(b.m.state().earnedTotal, 200); assert.equal(b.m.state().totalSpent, 100); assert.equal(b.m.state().membership.planId, 'black'); assert.equal(b.m.state().workPhase, 'peel');
 });
-test('losing cho returns no stake, winning han supports odd sums', () => {
-  const { m } = boot({ random: [0, 1, 9, 0, 1] }); m.startRound(100, 'cho'); m.settleRound(); assert.equal(m.state().balance, 9900);
-  m.startRound(100, 'han'); m.settleRound(); assert.equal(m.state().balance, 10000);
+test('full reset returns to the zero-yen beginning and locks the invitation', () => {
+  const b = boot(); collectRegular(b); b.m.clear(); const s = boot({ map: b.map }).m.state(); assert.equal(s.balance, 0); assert.equal(s.history.length, 0); assert.equal(s.earnedTotal, 0); assert.equal(s.membership, null); assert.equal(s.standardCompletion, null); assert.equal(s.completion, null); assert.equal(s.workPhase, 'seal');
 });
-test('pending results survive reload and cannot be rerolled or paid twice', () => {
-  const { m, map } = boot({ random: [0, 0] }); const r = m.startRound(5000, 'cho'); assert.throws(() => m.startRound(100, 'cho'), /前の勝負/);
-  const next = boot({ map }).m; assert.equal(next.state().pendingRound.id, r.id); next.settleRound(); assert.equal(next.state().balance, 15000); assert.equal(next.settleRound(), null); assert.equal(next.state().rounds.length, 1);
+test('blocked storage still supports temporary round trips and purchases', () => {
+  const b = boot({ blocked: true }); b.m.join('black'); cycle(b); b.m.buy('stone'); assert.equal(b.m.persistent, false); assert.equal(b.m.state().balance, 0); assert.equal(b.m.state().history.length, 1);
 });
-test('invalid bets and choices do not mutate ledger', () => {
-  const { m } = boot(); const before = JSON.stringify(m.state());
-  for (const n of [0, -100, 50, 101, 5100, NaN, Infinity]) assert.throws(() => m.startRound(n, 'cho'));
-  assert.throws(() => m.startRound(100, 'invalid')); assert.equal(JSON.stringify(m.state()), before);
+test('corrupt saved data is untouched until explicitly cleared', () => {
+  const map = new Map([[KEY, '{broken']]), b = boot({ map }); cycle(b); assert.equal(map.get(KEY), '{broken'); assert.equal(b.m.corrupt, true); b.m.clear(); assert.equal(boot({ map }).m.state().balance, 0);
 });
-test('insufficient money cannot be bet or spent', () => {
-  const { m } = boot({ random: [0, 1, 9, 0, 1] }); m.startRound(5000, 'cho'); m.settleRound(); m.startRound(5000, 'cho'); m.settleRound();
-  assert.equal(m.state().balance, 0); assert.throws(() => m.startRound(100, 'cho'), /足りません/); assert.throws(() => m.buy('stone'), /不足/);
-});
-test('dice faces discard out-of-range random values instead of modulo bias', () => {
-  const { m } = boot({ random: [4294967295, 5, 4] }); const r = m.startRound(100, 'han'); assert.equal(r.die1, 6); assert.equal(r.die2, 5); assert.equal(r.won, true);
-});
-test('only the 30 most recent dice rounds are retained', () => {
-  const { m } = boot(); for (let i = 0; i < 35; i++) { m.startRound(100, 'cho'); m.settleRound(); } assert.equal(m.state().rounds.length, 30);
-});
-test('membership join, switch and leave cost nothing and change no rewards', () => {
-  const { m, advance } = boot(); m.join('gold'); const since = m.state().membership.since; advance(5000); m.join('black');
-  assert.equal(m.state().membership.since, since); assert.equal(m.state().balance, 10000); assert.equal(m.work().amount, 10); m.leave(); assert.equal(m.state().membership, null); assert.throws(() => m.join('invalid'));
-});
-test('buying all unique products creates one persistent numberless completion', () => {
-  const { m, map } = boot(); let completed = 0;
-  for (const p of m.products) { if (m.state().balance < p.price) m.resetBalance(); completed += Number(m.buy(p.id).completedNow); }
-  assert.equal(completed, 1); assert.equal(m.state().completion.totalSpent, 14200); assert.equal(m.state().unlocked.includes('complete'), true); assert.equal(m.state().completion.number, undefined);
-  const date = m.state().completion.date; m.resetBalance(); assert.equal(m.buy('stone').completedNow, false); assert.equal(m.state().completion.date, date); assert.equal(boot({ map }).m.state().completion.date, date);
-});
-test('repeated copies of one product do not complete collection', () => {
-  const { m } = boot(); for (let i = 0; i < 9; i++) m.buy('stone'); assert.equal(m.state().completion, null); assert.equal(m.state().unlocked.includes('complete'), false);
-});
-test('reset preserves earned, purchased, membership and honors', () => {
-  const { m } = boot(); m.work(); m.buy('stone'); m.join('gold'); m.resetBalance(); assert.equal(m.state().balance, 10000); assert.equal(m.state().totalSpent, 100); assert.equal(m.state().earnedTotal, 10); assert.equal(m.state().membership.planId, 'gold'); assert.equal(m.state().history.length, 1);
-});
-test('clear deletes all game and membership records', () => {
-  const { m, map } = boot(); m.work(); m.buy('stone'); m.join('black'); m.startRound(100, 'cho'); m.clear();
-  const s = boot({ map }).m.state(); assert.equal(s.totalSpent, 0); assert.equal(s.earnedTotal, 0); assert.equal(s.history.length, 0); assert.equal(s.rounds.length, 0); assert.equal(s.pendingRound, null); assert.equal(s.membership, null); assert.equal(s.completion, null); assert.equal(s.balance, 10000);
-});
-test('corrupt records remain untouched until explicit clear', () => {
-  const map = new Map([[KEY, '{broken']]), { m } = boot({ map }); assert.equal(m.corrupt, true); m.work(); m.join('gold'); assert.equal(map.get(KEY), '{broken'); m.clear(); assert.equal(boot({ map }).m.corrupt, false);
-});
-test('blocked storage remains usable temporarily', () => {
-  const { m } = boot({ blocked: true }); m.work(); m.buy('stone'); m.join('gold'); assert.equal(m.persistent, false); assert.equal(m.state().balance, 9910); assert.equal(m.state().membership.planId, 'gold');
-});
-test('a second tab reads the latest balance before spending', () => {
-  const { m: a, map } = boot(), b = boot({ map }).m; a.work(); b.buy('dot'); assert.equal(a.state().balance, 9710); assert.equal(a.state().history.length, 1);
-});
-test('damaged v2 earnings are rejected without overwriting', () => {
-  const { map } = boot(), s = JSON.parse(map.get(KEY)); s.earnedTotal = 1000; map.set(KEY, JSON.stringify(s)); assert.equal(boot({ map }).m.corrupt, true); assert.equal(JSON.parse(map.get(KEY)).earnedTotal, 1000);
+test('a second tab cannot complete an already peeled envelope again', () => {
+  const b = boot(); b.m.workStep('seal'); b.advance(); const other = boot({ map: b.map, now: Date.now() + 1000 }).m; other.workStep('peel'); assert.throws(() => b.m.workStep('peel')); assert.equal(b.m.state().balance, 10);
 });

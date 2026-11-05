@@ -43,7 +43,7 @@
     const serif = '"Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", serif';
     function line(text, y, size, color = '#eee9df') { c.fillStyle = color; c.font = `${size}px ${serif}`; c.textAlign = 'center'; c.fillText(text, 800, y, 1400); }
     line('伊見内商会', 150, 35, '#b8a276'); line('WITH OUR DEEPEST GRATITUDE', 215, 23, '#b8a276');
-    line('感 謝 状', 360, 84); line('全商品コレクション達成', 435, 29, '#b8a276');
+    line('感 謝 状', 360, 84); line('特別な一品まで、完全クリア', 435, 29, '#b8a276');
     line('あなたは真の無駄使いyerです。', 565, 42);
     line('あなたはお金だけでなく、時間も無駄にしてくれました。', 645, 32);
     line('ありがとうございました。', 720, 38);

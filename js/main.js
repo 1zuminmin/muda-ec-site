@@ -3,7 +3,7 @@
   const M = window.Muda;
   const page = document.body.dataset.page;
   const links = [{ page: 'home', href: 'index.html', name: '商会について' }, { page: 'shop', href: 'shop.html', name: '商品一覧' }, { page: 'earn', href: 'earn.html', name: '資金づくり' }, { page: 'achievements', href: 'achievements.html', name: '実績' }, { page: 'membership', href: 'membership.html', name: '会員サロン' }];
-  document.getElementById('site-header').innerHTML = `<header class="site-header"><a class="brand" href="index.html" aria-label="伊見内商会 ホーム"><img src="assets/images/mark.svg" width="40" height="40" alt=""><span>伊見内商会<small>IMINAI SHOKAI</small></span></a><nav aria-label="メインナビゲーション">${links.map(l => `<a href="${l.href}" ${page === l.page ? 'aria-current="page"' : ''}>${l.name}</a>`).join('')}</nav><a class="header-wallet" href="earn.html"><span>架空の所持金</span><strong data-balance>¥10,000</strong></a></header>`;
+  document.getElementById('site-header').innerHTML = `<header class="site-header"><a class="brand" href="index.html" aria-label="伊見内商会 ホーム"><img src="assets/images/mark.svg" width="40" height="40" alt=""><span>伊見内商会<small>IMINAI SHOKAI</small></span></a><nav aria-label="メインナビゲーション">${links.map(l => `<a href="${l.href}" ${page === l.page ? 'aria-current="page"' : ''}>${l.name}</a>`).join('')}</nav><a class="header-wallet" href="earn.html"><span>架空の所持金</span><strong data-balance>¥0</strong></a></header>`;
   document.getElementById('site-footer').innerHTML = `<footer class="site-footer section"><div class="footer-top"><a class="brand" href="index.html"><img src="assets/images/mark.svg" width="36" height="36" alt=""><span>伊見内商会<small>IMINAI SHOKAI</small></span></a><p>あなたのお金を、全力で無駄にする場所。</p></div><nav class="footer-links" aria-label="フッターナビゲーション"><a href="earn.html">資金づくり</a><a href="membership.html">会員サロン</a><a href="author.html" ${page === 'author' ? 'aria-current="page"' : ''}>作者のボヤキ ↗</a></nav><div class="footer-bottom"><span>© ${new Date().getFullYear()} 伊見内商会</span><span>架空の購入・実際の支払いなし。すべて無料のシミュレーションです。</span></div><p class="storage-note">記録はこのブラウザに保存されます。ブラウザのデータを削除すると記録は失われます。</p></footer>`;
   M.card = (p, index, buying = false) => `<article class="product-card" data-product="${p.id}"><${buying ? 'div' : `a href="product.html?id=${p.id}"`} class="product-image"><img src="assets/images/${p.image}" alt="${p.name}" loading="lazy"><span class="product-number">N° ${String(index + 1).padStart(3, '0')}</span><span class="product-label">${p.id === 'void' ? '何もない、という完成形。' : p.id === 'dot' ? '一点の、曇りなき無意味。' : p.id === 'stone' ? 'どこにでもある、特別。' : '必要ないから、美しい。'}</span></${buying ? 'div' : 'a'}><div class="product-info"><p class="eyebrow">${p.english}</p><div class="product-title"><h3>${p.name}</h3><span>${M.money(p.price)}<small>架空</small></span></div><p class="product-description">${p.description}</p>${buying ? `<a class="product-more" href="product.html?id=${p.id}">詳細・架空レビューを見る <span>↗</span></a><p class="owned-label" data-owned="${p.id}"></p><button class="button buy-button" data-buy="${p.id}">架空購入する <span>↗</span></button>` : `<a class="product-more" href="product.html?id=${p.id}">詳細・架空レビューを見る <span>↗</span></a>`}</div></article>`;
   M.completionText = 'あなたは真の無駄使いyerです。あなたはお金だけでなく、時間も無駄にしてくれました。ありがとうございました。';
@@ -14,14 +14,22 @@
   };
   M.summaryShareURL = () => {
     const s = M.state(), count = new Set(s.history.map(p => p.productId)).size;
-    return M.xShareURL(`伊見内商会で累計${M.money(s.totalSpent)}を無駄にしました。\n無用の品 ${count} / ${M.products.length}種類。${s.completion ? '\n全商品制覇。真の無駄使いyerになりました。' : '\nここまでの無意味を、ご報告いたします。'}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`);
+    return M.xShareURL(`伊見内商会で累計${M.money(s.totalSpent)}を無駄にしました。\n無用の品 ${count} / ${M.visibleProducts(s).length}種類。${s.completion ? '\n特別な一品まで制覇。真の無駄使いyerになりました。' : '\nここまでの無意味を、ご報告いたします。'}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`);
   };
   M.notifyAchievements = newly => newly.forEach((a, i) => setTimeout(() => M.toast('実績解除 — ' + a.name, a.description), i * 700));
   function renderCollection(s) {
     const node = document.getElementById('collection-status');
     if (!node) return;
-    const count = new Set(s.history.map(p => p.productId)).size;
-    node.innerHTML = s.completion ? `<section class="completion-board" aria-label="全商品購入の感謝状"><p class="eyebrow">WITH OUR DEEPEST, MOST USELESS GRATITUDE</p><div class="completion-mark" aria-hidden="true">◇</div><h2>すべての無意味を、あなたへ。</h2><p class="completion-quote">${M.completionText}</p><p class="subtle">全${M.products.length}種類を収集 ／ 達成時の累計 ${M.money(s.completion.totalSpent)}（架空）</p><div class="inline-actions"><button class="button gold" data-download-completion>感謝状をPNGで保存 ↓</button><a class="button outline" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">全クリアをXで共有 ↗</a></div><p class="fine">会員番号の発行は今後対応予定です。感謝状は何度でも保存できます。</p></section>` : `<section class="collection-progress"><div><p class="eyebrow">YOUR COLLECTION</p><h3>無用の品を、ひとつずつ。</h3><p>全商品を集めると、弊社より心からの感謝状を。</p></div><div class="collection-progress-detail"><label for="collection-progress"><strong>${count} <small>/ ${M.products.length}種類</small></strong><span>累計 ${M.money(s.totalSpent)}（架空）</span></label><progress id="collection-progress" max="${M.products.length}" value="${count}">${count} / ${M.products.length}</progress><a class="text-link" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">ここまでの無駄遣いをXで共有 ↗</a></div></section>`;
+    const count = new Set(s.history.map(p => p.productId)).size, total = M.visibleProducts(s).length, invited = M.specialUnlocked(s);
+    node.innerHTML = s.completion ? `<section class="completion-board" aria-label="全商品購入の感謝状"><p class="eyebrow">WITH OUR DEEPEST, MOST USELESS GRATITUDE</p><div class="completion-mark" aria-hidden="true">◇</div><h2>すべての無意味を、あなたへ。</h2><p class="completion-quote">${M.completionText}</p><p class="subtle">特別な一品を含む全${M.products.length}種類を収集 ／ 達成時の累計 ${M.money(s.completion.totalSpent)}（架空）</p><div class="inline-actions"><button class="button gold" data-download-completion>完全クリアの感謝状をPNGで保存 ↓</button><a class="button outline" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">完全クリアをXで共有 ↗</a></div><p class="fine">会員番号の発行は今後対応予定です。感謝状は何度でも保存できます。</p></section>` : `<section class="collection-progress"><div><p class="eyebrow">YOUR COLLECTION</p><h3>${invited ? 'お得意様への特別なご案内です。' : '無用の品を、ひとつずつ。'}</h3><p>${invited ? '通常9品を揃えたあなたに、最後の一品をご用意しました。' : '通常9品の向こうに、もう少しだけ無意味が待っています。'}</p>${invited ? '<a class="text-link" href="shop.html#private-collection">特別な一品を見る ↗</a>' : ''}</div><div class="collection-progress-detail"><label for="collection-progress"><strong>${count} <small>/ ${total}種類</small></strong><span>累計 ${M.money(s.totalSpent)}（架空）</span></label><progress id="collection-progress" max="${total}" value="${count}">${count} / ${total}</progress><a class="text-link" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">ここまでの無駄遣いをXで共有 ↗</a></div></section>`;
+  }
+  function renderInvitation(s) {
+    const section = document.getElementById('private-collection');
+    if (!section) return;
+    section.hidden = !M.specialUnlocked(s);
+    if (section.hidden) { section.innerHTML = ''; return; }
+    const p = M.products.find(p => p.secret);
+    section.innerHTML = `<div class="invitation-copy"><p class="eyebrow">A PRIVATE OFFER FOR OUR MOST VALUED CUSTOMER</p><h2>お得意様への<br>特別なご案内です。</h2><p>通常の9品をお選びくださったあなたへ。<br>弊社が最後にご用意したのは、<br>あなた自身の徒労でございます。</p><span class="subtle">この一品の購入で、完全クリアとなります。</span></div><div class="private-product">${M.card(p, M.products.indexOf(p), true)}</div>`;
   }
   document.addEventListener('click', async e => {
     const button = e.target.closest('[data-download-completion]');
@@ -43,7 +51,8 @@
     document.querySelectorAll('[data-balance]').forEach(el => el.textContent = M.money(s.balance));
     document.querySelectorAll('[data-stat]').forEach(el => el.textContent = el.dataset.stat === 'spent' ? M.money(s.totalSpent) : el.dataset.stat === 'count' ? s.history.length : s.unlocked.length);
     document.querySelectorAll('[data-achievement-total]').forEach(el => el.textContent = M.achievements.length);
-    document.querySelectorAll('[data-product-total]').forEach(el => el.textContent = M.products.length);
+    document.querySelectorAll('[data-product-total]').forEach(el => el.textContent = M.visibleProducts(s).length);
+    renderInvitation(s);
     document.querySelectorAll('[data-owned]').forEach(el => el.textContent = s.history.some(p => p.productId === el.dataset.owned) ? '✓ コレクション済み' : '未収集');
     document.querySelectorAll('[data-share-summary]').forEach(el => el.href = M.summaryShareURL());
     renderCollection(s);

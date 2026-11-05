@@ -1,6 +1,6 @@
 (() => {
   const M = window.Muda, id = new URLSearchParams(location.search).get('id'), p = M.products.find(p => p.id === id), root = document.getElementById('product-detail');
-  if (!p) {
+  if (!p || !M.canView(p.id)) {
     root.innerHTML = '<div class="missing-product"><p class="eyebrow">NOT FOUND</p><h1>その無意味は、見つかりません。</h1><p>商品一覧から、別の無用の品をお選びください。</p><a class="button gold" href="shop.html">商品一覧へ ↗</a></div>';
     return;
   }
