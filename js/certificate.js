@@ -5,9 +5,7 @@
   M.shareURL = purchase => {
     const p = M.products.find(p => p.id === purchase.productId);
     const text = `伊見内商会で「${p.name}」に${M.money(purchase.price)}を無駄遣いしました。\nここまでの累計 ${M.money(M.state().totalSpent)}。\n${p.message}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`;
-    const params = new URLSearchParams({ text });
-    if (['http:', 'https:'].includes(location.protocol) && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) params.set('url', new URL('index.html', location.href).href);
-    return 'https://twitter.com/intent/tweet?' + params;
+    return M.xShareURL(text);
   };
   M.downloadCertificate = async purchase => {
     const recipient = M.recipientName();

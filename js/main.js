@@ -8,11 +8,6 @@
   M.card = (p, index, buying = false) => `<article class="product-card" data-product="${p.id}"><${buying ? 'div' : `a href="product.html?id=${p.id}"`} class="product-image"><img src="assets/images/${p.image}" alt="${p.name}" loading="lazy"><span class="product-number">N° ${String(index + 1).padStart(3, '0')}</span><span class="product-label">${p.id === 'void' ? '何もない、という完成形。' : p.id === 'dot' ? '一点の、曇りなき無意味。' : p.id === 'stone' ? 'どこにでもある、特別。' : '必要ないから、美しい。'}</span></${buying ? 'div' : 'a'}><div class="product-info"><p class="eyebrow">${p.english}</p><div class="product-title"><h3>${p.name}</h3><span>${M.money(p.price)}<small>架空</small></span></div><p class="product-description">${p.description}</p>${buying ? `<a class="product-more" href="product.html?id=${p.id}">詳細・架空レビューを見る <span>↗</span></a><p class="owned-label" data-owned="${p.id}"></p><button class="button buy-button" data-buy="${p.id}">架空購入する <span>↗</span></button>` : `<a class="product-more" href="product.html?id=${p.id}">詳細・架空レビューを見る <span>↗</span></a>`}</div></article>`;
   M.badgeHTML = (plan = M.memberPlan()) => `<img class="member-insignia" src="assets/images/${plan?.badge || 'insignia-0.svg'}" alt="${plan ? `${plan.name}・${plan.badgeDescription}` : '未入会・山形のない盾章'}" width="64" height="76">`;
   M.completionText = 'あなたは真の無駄使いyerです。あなたはお金だけでなく、時間も無駄にしてくれました。ありがとうございました。';
-  M.xShareURL = text => {
-    const params = new URLSearchParams({ text });
-    if (['http:', 'https:'].includes(location.protocol) && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) params.set('url', new URL('index.html', location.href).href);
-    return 'https://twitter.com/intent/tweet?' + params;
-  };
   M.summaryShareURL = () => {
     const s = M.state(), { count, total } = M.collectionProgress(s);
     return M.xShareURL(`伊見内商会で累計${M.money(s.totalSpent)}を無駄にしました。\n無用の品 ${count} / ${total}種類。${s.completion ? '\n特別な一品まで制覇。真の無駄使いyerになりました。' : '\nここまでの無意味を、ご報告いたします。'}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`);

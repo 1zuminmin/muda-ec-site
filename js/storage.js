@@ -120,6 +120,11 @@
   }
   const start = read(); unlock(start); save(start);
   window.Muda = {
+    siteURL: 'https://1zuminmin.github.io/muda-ec-site/',
+    xShareURL(text) {
+      const params = new URLSearchParams({ text, url: this.siteURL });
+      return 'https://twitter.com/intent/tweet?' + params;
+    },
     products, regularProducts, achievements, plans, state, joinQuote,
     regularAchievements: achievements.filter(a => a.id !== 'complete'),
     regularHonorCount: (s = state()) => achievements.filter(a => a.id !== 'complete' && s.unlocked.includes(a.id)).length, valueFor, nameLength,
