@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111d29">
+<title>マイページ | 伊見内商会</title>
+<link rel="icon" href="assets/images/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/experience.css">
+<script defer src="js/storage.js"></script>
+<script defer src="js/main.js"></script>
+<script defer src="js/certificate.js"></script>
+<script defer src="js/mypage.js"></script>
+</head>
+<body data-page="mypage">
+<a class="skip" href="#main">本文へ移動</a>
+<div id="site-header"></div>
+<main id="main">
+<section class="page-intro section">
+<p class="eyebrow">YOUR PERSONAL DOSSIER</p>
+<h1>無駄にも、お名前を。</h1>
+<p>肩書きと、徽章と、積み重ねた無意味。<br>こちらが、あなたのお得意様台帳です。</p>
+</section>
+<section class="section mypage-section">
+<div class="profile-grid">
+<article class="profile-card" aria-label="お客様の会員情報">
+<p class="eyebrow">THE HOLDER OF THIS INSIGNIA</p>
+<div class="profile-insignia" id="profile-insignia"></div>
+<h2 id="profile-display-name">名もなき浪費家</h2>
+<p class="profile-rank" id="profile-rank">未入会</p>
+<p class="profile-insignia-description" id="profile-insignia-description">山形のない盾章</p>
+<dl class="profile-ledger"><div><dt>架空の所持金</dt><dd data-balance>¥0</dd></div><div><dt>累計架空無駄遣い額</dt><dd id="profile-spent">¥0</dd></div><div><dt>封筒1往復の報酬</dt><dd id="profile-work-rate">¥10</dd></div><div><dt>コレクション</dt><dd id="profile-collection">0 / 9種類</dd></div></dl>
+<a class="button outline full" href="membership.html">会員位階を変更する ↗</a>
+</article>
+<div class="profile-edit-column">
+<section class="profile-edit"><p class="eyebrow">HOW SHALL WE ADDRESS YOU?</p><h2>お名前のご登録</h2>
+<form id="profile-form">
+<label for="profile-name">認定証・感謝状にお入れするお名前</label>
+<input id="profile-name" name="displayName" type="text" placeholder="例：徒労 太郎" autocomplete="nickname" aria-describedby="profile-name-help profile-name-count" spellcheck="false">
+<div class="name-help-row"><p id="profile-name-help">ニックネームで結構です。20文字まで。</p><span id="profile-name-count">0 / 20文字</span></div>
+<p class="name-preview">賞状の宛名：<strong id="certificate-name-preview">名もなき浪費家 様</strong></p>
+<button class="button gold" type="submit">このお名前を保存する <span>↗</span></button>
+<p class="profile-feedback" id="profile-feedback" role="status"></p>
+</form>
+<p class="fine">空欄で保存すると名前を解除できます。保存後に発行する認定証・感謝状に反映され、過去の購入分も新しい名前で再保存できます。すでに保存した画像は変わりません。</p>
+<p class="fine">このブラウザだけに保存されます。実名は不要です。Xの共有文にお名前を自動で加えることはありません。</p>
+</section>
+<section class="named-certificate"><p class="eyebrow">A CERTIFICATE IN YOUR NAME</p><h2>あなた宛ての、無駄の証。</h2><p id="certificate-availability">商品を購入すると、お名前入りの認定証を保存できます。</p><button class="button outline full" id="save-latest-certificate" type="button" hidden>最新の購入認定証をPNGで保存 ↓</button><a class="text-link" href="shop.html">購入履歴・認定証を見る ↗</a></section>
+</div>
+</div>
+<div id="collection-status"></div>
+</section>
+</main>
+<div id="site-footer"></div><div id="toast-region" aria-live="polite"></div>
+</body>
+</html>

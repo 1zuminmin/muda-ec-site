@@ -7,7 +7,8 @@
     document.getElementById('work-count').textContent = s.workCount.toLocaleString('ja-JP');
     document.getElementById('work-earned').textContent = M.money(s.earnedTotal);
     document.getElementById('work-rate').textContent = M.money(M.workRate(s));
-    document.getElementById('work-plan').textContent = M.plans.find(p => p.id === s.membership?.planId)?.name || '未入会';
+    const plan = M.memberPlan(s);
+    document.getElementById('work-plan').textContent = plan ? `${plan.english} / ${plan.name}` : '未入会';
     document.getElementById('work-phase').textContent = sealed ? '02 / PEEL' : '01 / SEAL';
     document.getElementById('work-instruction').textContent = sealed ? '今の糊を、丁寧に剥がしてください。' : '糊を塗って、封をしてください。';
     document.getElementById('gesture-hint').textContent = sealed ? '封筒を上へなぞるか、もう一度タップしてください。' : '封筒を右へなぞるか、タップしてください。';

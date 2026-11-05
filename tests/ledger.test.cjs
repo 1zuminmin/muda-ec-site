@@ -25,7 +25,7 @@ function cycle(b) { const seal = b.m.workStep('seal'); b.advance(); const peel =
 function earn(b, amount) { while (b.m.state().balance < amount) cycle(b); }
 function collectRegular(b) { b.m.join('black'); let last; for (const p of b.m.regularProducts) { earn(b, p.price); last = b.m.buy(p.id); } return last; }
 test('new game starts at zero, with nine visible products and no gambling API', () => {
-  const { m } = boot(); assert.equal(m.state().balance, 0); assert.equal(m.state().version, 3); assert.equal(m.visibleProducts().length, 9); assert.equal(m.specialUnlocked(), false); assert.equal(m.startRound, undefined); assert.equal(m.settleRound, undefined);
+  const { m } = boot(); assert.equal(m.state().balance, 0); assert.equal(m.state().version, 4); assert.equal(m.visibleProducts().length, 9); assert.equal(m.specialUnlocked(), false); assert.equal(m.startRound, undefined); assert.equal(m.settleRound, undefined);
 });
 test('sealing pays nothing; peeling restores the envelope and pays once', () => {
   const b = boot(), { m } = b; const seal = m.workStep('seal');
@@ -80,7 +80,7 @@ test('complete snapshot persists across reload and does not issue twice', () => 
 });
 test('v1 migration preserves the user balance and original purchase records', () => {
   const map = new Map([[KEY, JSON.stringify(legacy())]]), { m } = boot({ map });
-  assert.equal(m.state().version, 3); assert.equal(m.state().balance, 8600); assert.equal(m.state().totalSpent, 1400); assert.equal(m.state().history.length, 3); assert.equal(m.corrupt, false);
+  assert.equal(m.state().version, 4); assert.equal(m.state().balance, 8600); assert.equal(m.state().totalSpent, 1400); assert.equal(m.state().history.length, 3); assert.equal(m.corrupt, false);
 });
 test('v2 keeps earnings and membership, retires old rounds and settles pending win once', () => {
   const s = legacy(2); s.membership = { planId: 'gold', since: s.lastUsed }; s.pendingRound = { stake: 500, die1: 1, die2: 1, choice: 'cho', won: true };

@@ -10,6 +10,7 @@
     return 'https://twitter.com/intent/tweet?' + params;
   };
   M.downloadCertificate = async purchase => {
+    const recipient = M.recipientName();
     await document.fonts.ready;
     const p = M.products.find(p => p.id === purchase.productId);
     const canvas = document.createElement('canvas'); canvas.width = 1600; canvas.height = 1100;
@@ -20,7 +21,9 @@
     const sans = '"Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif';
     function line(text, y, size, color = '#eee9df', font = serif) { c.fillStyle = color; c.font = `${size}px ${font}`; c.textAlign = 'center'; c.fillText(text, 800, y, 1400); }
     line('伊見内商会', 149, 34, '#b8a276'); line('CERTIFICATE OF GLORIOUS WASTE', 212, 21, '#b8a276', sans);
-    line('無駄遣い認定証', 345, 76); line('ここに、あなたの見事な無駄遣いを認定いたします。', 429, 27);
+    line('無駄遣い認定証', 320, 66);
+    line(`${recipient} 様`, 400, 38, '#b8a276');
+    line('ここに、あなたの見事な無駄遣いを認定いたします。', 448, 24);
     c.strokeStyle = '#5b5547'; c.beginPath(); c.moveTo(300, 480); c.lineTo(1300, 480); c.stroke();
     line(p.name, 571, 48); line(`架空購入金額  ${M.money(purchase.price)}`, 640, 35, '#b8a276');
     line('お客様の架空の資産は、何の役にも立たないものへと変換されました。', 726, 25, '#d0ccc3');
@@ -44,9 +47,10 @@
     function line(text, y, size, color = '#eee9df') { c.fillStyle = color; c.font = `${size}px ${serif}`; c.textAlign = 'center'; c.fillText(text, 800, y, 1400); }
     line('伊見内商会', 150, 35, '#b8a276'); line('WITH OUR DEEPEST GRATITUDE', 215, 23, '#b8a276');
     line('感 謝 状', 360, 84); line('特別な一品まで、完全クリア', 435, 29, '#b8a276');
-    line('あなたは真の無駄使いyerです。', 565, 42);
-    line('あなたはお金だけでなく、時間も無駄にしてくれました。', 645, 32);
-    line('ありがとうございました。', 720, 38);
+    line(`${M.recipientName(s)} 様`, 505, 36, '#b8a276');
+    line('あなたは真の無駄使いyerです。', 590, 40);
+    line('あなたはお金だけでなく、時間も無駄にしてくれました。', 665, 30);
+    line('ありがとうございました。', 738, 36);
     line(`全${M.products.length}種類を購入 ／ ${s.completion.count}点の無用の品`, 835, 29, '#b8a276');
     line(`達成時の累計架空無駄遣い額  ${M.money(s.completion.totalSpent)}`, 890, 30, '#b8a276');
     line(`達成日  ${date(s.completion.date)}`, 960, 25);

@@ -27,11 +27,24 @@
     { id: 'complete', name: '真の無駄使いyer', description: '特別なご案内を含む全10種類を購入する', target: products.length, type: 'unique', symbol: 'Ⅸ' }
   ]);
   const plans = Object.freeze([
-    { id: 'ordinary', name: '平会員', english: 'ORDINARY', tagline: 'まずは、品のある無駄から。', rate: 20, rank: 'Ⅰ' },
-    { id: 'gold', name: '浪費家会員', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, rank: 'Ⅱ' },
-    { id: 'black', name: '虚無の賓客', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, rank: 'Ⅲ' }
+    { id: 'ordinary', name: '紅蓮', english: 'RED', tagline: 'まずは、品のある無駄から。', rate: 20, rank: 'Ⅰ', badge: 'insignia-1.svg', badgeDescription: '一段の山形を持つ盾章', level: 1 },
+    { id: 'gold', name: '金剛', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, rank: 'Ⅱ', badge: 'insignia-2.svg', badgeDescription: '二段の山形と一つ星を持つ盾章', level: 2 },
+    { id: 'black', name: '黒曜', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, rank: 'Ⅲ', badge: 'insignia-3.svg', badgeDescription: '三段の山形と三つ星、月桂樹を持つ盾章', level: 3 }
   ]);
-  const initial = () => ({ version: 3, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, standardCompletion: null, completion: null });
+  const initial = () => ({ version: 4, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
+  const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja', { granularity: 'grapheme' }) : null;
+  const nameLength = name => segmenter ? Array.from(segmenter.segment(name)).length : Array.from(name).length;
+  function normalizeName(value) {
+    if (typeof value !== 'string') throw new Error('お名前を文字で入力してください。');
+    const name = value.normalize('NFC').trim().replace(/\s+/gu, ' ');
+    if (nameLength(name) > 20) throw new Error('お名前は20文字以内で入力してください。');
+    if (/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u.test(name)) throw new Error('お名前に使用できない制御文字が含まれています。');
+    return name;
+  }
+  function profileValid(profile) {
+    try { return profile && typeof profile.name === 'string' && normalizeName(profile.name) === profile.name; }
+    catch { return false; }
+  }
   const owned = s => new Set(s.history.map(p => p.productId));
   const regularCount = s => regularProducts.filter(p => owned(s).has(p.id)).length;
   const specialUnlocked = s => regularCount(s) === regularProducts.length;
@@ -43,7 +56,7 @@
   const dateValid = d => typeof d === 'string' && Number.isFinite(Date.parse(d));
   const snapshotValid = r => r && dateValid(r.date) && integer(r.totalSpent) && integer(r.count);
   function baseValid(s) {
-    return s && [1, 2, 3].includes(s.version) && integer(s.balance) && integer(s.totalSpent) && Array.isArray(s.history) && s.history.every(p => products.some(a => a.id === p.productId && a.price === p.price) && typeof p.id === 'string' && /^[A-Za-z0-9-]+$/.test(p.id) && dateValid(p.date)) && s.history.reduce((sum, p) => sum + p.price, 0) === s.totalSpent && Array.isArray(s.unlocked) && s.unlocked.every(id => achievements.some(a => a.id === id)) && dateValid(s.lastUsed);
+    return s && [1, 2, 3, 4].includes(s.version) && integer(s.balance) && integer(s.totalSpent) && Array.isArray(s.history) && s.history.every(p => products.some(a => a.id === p.productId && a.price === p.price) && typeof p.id === 'string' && /^[A-Za-z0-9-]+$/.test(p.id) && dateValid(p.date)) && s.history.reduce((sum, p) => sum + p.price, 0) === s.totalSpent && Array.isArray(s.unlocked) && s.unlocked.every(id => achievements.some(a => a.id === id)) && dateValid(s.lastUsed);
   }
   // Only used to safely retire an in-progress result from the previous release.
   function oldRoundValid(r) {
@@ -54,10 +67,11 @@
     if (s.version === 1) return true;
     if (!integer(s.workCount) || !integer(s.workLastAt) || !integer(s.earnedTotal) || !(s.membership === null || (plans.some(p => p.id === s.membership.planId) && dateValid(s.membership.since)))) return false;
     if (s.version === 2) return s.earnedTotal === s.workCount * 10 && Array.isArray(s.rounds) && (s.pendingRound === null || oldRoundValid(s.pendingRound)) && (s.completion === null || snapshotValid(s.completion));
-    return ['seal', 'peel'].includes(s.workPhase) && (s.standardCompletion === null || (snapshotValid(s.standardCompletion) && specialUnlocked(s))) && (s.completion === null || (snapshotValid(s.completion) && isComplete(s))) && (!owned(s).has('final-envelope') || specialUnlocked(s));
+    return (s.version === 3 || profileValid(s.profile)) && ['seal', 'peel'].includes(s.workPhase) && (s.standardCompletion === null || (snapshotValid(s.standardCompletion) && specialUnlocked(s))) && (s.completion === null || (snapshotValid(s.completion) && isComplete(s))) && (!owned(s).has('final-envelope') || specialUnlocked(s));
   }
   function migrate(s) {
-    if (s.version === 3) return s;
+    if (s.version === 4) return s;
+    if (s.version === 3) return { ...s, version: 4, profile: { name: '' } };
     const next = {
       ...initial(), balance: s.balance, history: s.history, totalSpent: s.totalSpent,
       unlocked: s.unlocked.filter(id => id !== 'complete'), lastUsed: s.lastUsed,
@@ -98,7 +112,10 @@
   function id() { return 'IS-' + Date.now().toString(36).toUpperCase() + '-' + crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase(); }
   const start = read(); unlock(start); save(start);
   window.Muda = {
-    products, regularProducts, achievements, plans, state, valueFor,
+    products, regularProducts, achievements, plans, state, valueFor, nameLength,
+    recipientName: (s = state()) => s.profile.name || '名もなき浪費家',
+    memberPlan: (s = state()) => plans.find(p => p.id === s.membership?.planId) || null,
+    setName(value) { const name = normalizeName(value), s = state(); s.profile = { name }; save(s); return name; },
     regularCount: (s = state()) => regularCount(s),
     specialUnlocked: (s = state()) => specialUnlocked(s),
     visibleProducts: (s = state()) => products.filter(p => !p.secret || specialUnlocked(s)),

@@ -1,5 +1,51 @@
 /* Shared extensions for the earning room, salon, collection and product stories. */
 .site-header nav { gap: 25px; }
+.account-hub { display: flex; align-items: center; gap: 22px; flex-shrink: 0; }
+.account-hub .header-wallet { display: flex; flex-direction: column; align-items: end; gap: 2px; border: 0; padding: 0; }
+.account-hub .header-wallet > span { display: block; font-size: 9px; }
+.account-hub .header-wallet strong { font-size: 24px; }
+.header-profile { display: flex; align-items: center; gap: 11px; padding-left: 20px; border-left: 1px solid var(--line); min-height: 42px; }
+.header-profile-copy > span { display: block; font-size: 10px; color: var(--gold-light); }
+.header-profile-copy strong { display: block; font-weight: 400; font-size: 10px; color: #bac1c5; max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.header-profile:hover .header-profile-copy > span, .header-profile[aria-current] .header-profile-copy > span { color: var(--paper); }
+.member-insignia { object-fit: contain; flex-shrink: 0; }
+.header-profile .member-insignia { width: 32px; height: 40px; }
+.plan-insignia { display: flex; align-items: center; gap: 18px; margin: 0 0 25px; }
+.plan-insignia .member-insignia { width: 68px; height: 82px; }
+.plan-insignia > span { color: var(--gold-light); font: 20px var(--serif); }
+.plan-grid .plan-card h2 { font-size: 24px; line-height: 1.8; overflow-wrap: anywhere; }
+.member-current-insignia + div { margin-right: auto; }
+.member-current-insignia .member-insignia { width: 58px; height: 70px; }
+.insignia-note { font-size: 10px; color: var(--muted); margin: 24px 0 0; }
+.mypage-section { padding-top: 5px; }
+.profile-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 35px; align-items: start; }
+.profile-card { text-align: center; border: 1px solid var(--line); background: #172531; padding: 35px; }
+.profile-insignia { display: flex; justify-content: center; margin: 25px 0; }
+.profile-insignia .member-insignia { width: 112px; height: 134px; }
+.profile-card h2 { font-size: 27px; line-height: 1.9; overflow-wrap: anywhere; }
+.profile-rank { color: var(--gold-light); font: 16px/2 var(--serif); margin-top: 12px; }
+.profile-insignia-description { color: var(--muted); font-size: 10px; margin-top: 10px; }
+.profile-ledger { margin: 28px 0; text-align: left; }
+.profile-ledger > div { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 15px 0; border-top: 1px solid var(--line); }
+.profile-ledger dt { color: var(--muted); font-size: 10px; }
+.profile-ledger dd { font: 21px Georgia, serif; color: var(--gold-light); margin: 0; }
+.profile-ledger > div:last-child dd { font: 12px var(--sans); }
+.profile-edit, .named-certificate { padding: 32px; border: 1px solid var(--line); }
+.profile-edit h2, .named-certificate h2 { font-size: 26px; margin: 15px 0 25px; }
+.profile-edit label { display: block; font-size: 12px; margin-bottom: 12px; }
+.profile-edit input { display: block; width: 100%; background: var(--deep); border: 1px solid var(--line); color: var(--paper); font: 17px/1.5 var(--sans); padding: 14px; border-radius: 0; }
+.profile-edit input:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+.profile-edit input[aria-invalid="true"] { border-color: #c39888; }
+.name-help-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 10px; color: var(--muted); }
+.name-preview { font-size: 11px; color: var(--muted); margin: 25px 0; padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.name-preview strong { display: block; font: 20px/1.8 var(--serif); color: var(--gold-light); margin-top: 10px; }
+.profile-feedback { min-height: 28px; font-size: 11px; color: var(--gold-light); margin: 17px 0; }
+.profile-edit .fine + .fine { margin-top: 12px; }
+.named-certificate { margin-top: 25px; background: #14222e; }
+.named-certificate > p:not(.eyebrow) { color: var(--muted); font-size: 12px; line-height: 2.2; margin-bottom: 20px; }
+.named-certificate .text-link { margin-top: 18px; }
+.mypage-section #collection-status { margin-top: 40px; }
+[hidden] { display: none !important; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 24px; font-size: 11px; color: var(--gold-light); }
 .footer-links a:hover { text-decoration: underline; text-underline-offset: 5px; }
 .hero-art > img { object-position: center 65%; }
@@ -149,6 +195,9 @@
 .missing-product h1 { font-size: 30px; margin: 25px 0; }
 .missing-product p:not(.eyebrow) { font-size: 12px; color: var(--muted); margin-bottom: 30px; }
 @media (max-width: 1100px) {
+  .site-header { height: auto; display: grid; grid-template-columns: 1fr auto; padding-top: 17px; gap: 10px 20px; }
+  .site-header nav { grid-row: 2; grid-column: 1 / -1; padding: 4px 0 12px; justify-content: center; }
+  .account-hub { grid-column: 2; grid-row: 1; }
   .site-header { gap: 18px; }
   .site-header nav { gap: 18px; }
   .site-header nav a { font-size: 11px; }
@@ -159,6 +208,19 @@
   .detail-copy h1 { font-size: 29px; }
 }
 @media (max-width: 760px) {
+  .profile-grid { grid-template-columns: 1fr; gap: 25px; }
+  .account-hub { gap: 12px; }
+  .account-hub .header-wallet strong { font-size: 20px; }
+  .account-hub .header-wallet > span { font-size: 7px; }
+  .header-profile { gap: 7px; padding-left: 12px; }
+  .header-profile-copy > span { font-size: 9px; }
+  .header-profile-copy strong { font-size: 9px; max-width: 55px; }
+  .header-profile .member-insignia { width: 27px; height: 34px; }
+  .profile-card, .profile-edit, .named-certificate { padding: 26px; }
+  .profile-edit .button { width: 100%; justify-content: center; }
+  .profile-edit h2, .named-certificate h2 { font-size: 24px; }
+  .profile-insignia .member-insignia { width: 96px; height: 115px; }
+  .member-status { justify-content: flex-start; }
   .pointless-work-grid { grid-template-columns: 1fr; gap: 25px; }
   .work-title-row { gap: 10px; }
   .phase-label { font-size: 8px; padding: 6px; }
@@ -216,4 +278,18 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .work-flap { transition: none; }
+}
+@media (max-width: 380px) {
+  .site-header { gap: 8px; }
+  .site-header .brand { gap: 6px; }
+  .site-header .brand > span { font-size: 16px; }
+  .site-header .brand img { width: 26px; height: 26px; }
+  .site-header .brand small { font-size: 6px; }
+  .account-hub { gap: 7px; }
+  .account-hub .header-wallet > span { display: none; }
+  .account-hub .header-wallet strong { font-size: 18px; }
+  .header-profile { gap: 5px; padding-left: 7px; }
+  .header-profile .member-insignia { width: 24px; height: 30px; }
+  .header-profile-copy > span { font-size: 8px; }
+  .header-profile-copy strong { max-width: 48px; }
 }
