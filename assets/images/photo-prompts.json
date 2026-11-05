@@ -1,0 +1,42 @@
+{
+  "tool": "Built-in ImageGen",
+  "created": "2026-11-06",
+  "prompts": [
+    {
+      "file": "dot-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. A tiny single perfectly black ink dot, about 8mm diameter, placed alone at the exact center of a thick ivory cotton-paper square, mounted upright on a very understated gallery stand. The paper is the display surface, the dot is the absurdly precious subject. Macro fine-art product photography, visible fine paper grain."
+    },
+    {
+      "file": "void-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. An entirely EMPTY small dark museum display niche with an empty black velvet pedestal inside. Carefully lit empty negative space, absolutely no object on the pedestal. Photograph the absence as a luxury item. A very thin brass edge around the display, no glass reflections suggesting a hidden object."
+    },
+    {
+      "file": "air-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. One elegantly simple transparent empty glass apothecary jar with a clear lid, on a charcoal stone plinth. It contains only ordinary invisible air, no liquid, smoke, labels, crystals or objects. Subtle realistic glass reflections and refractions, meticulous studio still-life photography."
+    },
+    {
+      "file": "margin-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. One completely blank warm ivory fine-art paper sheet with generous unmarked whitespace, lying on a dark gallery table at a slight angle. Natural paper thickness, softly curled corner, fine fibers, beautiful directional lighting. No marks or writing whatsoever."
+    },
+    {
+      "file": "receipt-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. A single narrow off-white thermal receipt paper strip with a delicately curled lower end, on a black velvet jewelry display. Fine tiny abstract gray horizontal rule-like ink marks suggest a receipt but absolutely no readable text, numbers, brands or currencies. Realistic paper fibers and folds."
+    },
+    {
+      "file": "sigh-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. A fleeting, very subtle thin pale plume of exhaled breath-like water vapor drifting through a beam of warm-white light against a dark navy studio. No person, no mouth, no incense, no device or container. Natural photographic mist with delicate translucent wisps, elegant and quiet, not a dramatic smoke cloud."
+    },
+    {
+      "file": "waiting-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. One premium small black-framed desktop monitor on a minimal charcoal table, its dark screen showing only a very thin muted ivory progress bar that is stalled at about one fifth. No numbers, words, icons or logos. Photorealistic glass, bezel, metal stand and subtle reflections, quiet frozen waiting."
+    },
+    {
+      "file": "right-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. One beautifully crafted empty dark leather lounge chair in an otherwise empty dark navy gallery room, spotlight gently illuminating the unoccupied seat. No person, writing or other furniture. A quiet conceptual premium photograph of the right to do absolutely nothing, realistic leather texture and grounded shadow."
+    },
+    {
+      "file": "final-envelope-photo.png",
+      "prompt": "Use case: product-mockup. Asset: one square photorealistic premium product photograph for a satirical Japanese luxury store. Quiet dark navy and charcoal studio, subtle warm-white jewelry-store spotlight and soft rim light, real material texture, realistic contact shadows, elegant restrained composition, generous negative space. Main subject centered and fully visible in the central 65% so it crops into a square card. No people, logos, watermarks, readable letters, price labels, neon glow, glitter, collages, or illustrations. One ordinary unmarked cream paper envelope, flap open, visibly carrying tiny traces of dried glue and several gentle creases from being repeatedly sealed and reopened. Presented like an impossibly precious jewel on a charcoal velvet plinth. Absolutely empty, no letters inside, no seal, no writing. The mundane paper envelope is the clear main subject, meticulous photographic detail."
+    }
+  ]
+}

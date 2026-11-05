@@ -55,8 +55,8 @@
     const badge = document.querySelector('[data-profile-badge]');
     if (badge) { badge.src = 'assets/images/' + (member?.badge || 'insignia-0.svg'); badge.alt = member ? member.name + '・' + member.badgeDescription : '未入会・山形のない盾章'; }
     document.querySelectorAll('[data-balance]').forEach(el => el.textContent = M.money(s.balance));
-    document.querySelectorAll('[data-stat]').forEach(el => el.textContent = el.dataset.stat === 'spent' ? M.money(s.totalSpent) : el.dataset.stat === 'count' ? s.history.length : s.unlocked.length);
-    document.querySelectorAll('[data-achievement-total]').forEach(el => el.textContent = M.achievements.length);
+    document.querySelectorAll('[data-stat]').forEach(el => el.textContent = el.dataset.stat === 'spent' ? M.money(s.totalSpent) : el.dataset.stat === 'count' ? s.history.length : M.regularHonorCount(s));
+    document.querySelectorAll('[data-achievement-total]').forEach(el => el.textContent = M.regularAchievements.length);
     document.querySelectorAll('[data-product-total]').forEach(el => el.textContent = M.visibleProducts(s).length);
     renderInvitation(s);
     document.querySelectorAll('[data-owned]').forEach(el => el.textContent = s.history.some(p => p.productId === el.dataset.owned) ? '✓ コレクション済み' : '未収集');

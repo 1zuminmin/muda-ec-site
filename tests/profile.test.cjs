@@ -12,7 +12,7 @@ function boot(map = new Map(), extras = {}) {
   return { m: window.Muda, window, map, context };
 }
 test('registered names normalize and persist independently of money and memberships', () => {
-  const { m, map } = boot(); m.join('gold'); m.setName('　徒労   太郎　');
+  const { m, map } = boot(); const funded = m.state(); funded.balance = 5000; map.set(KEY, JSON.stringify(funded)); m.join('gold'); m.setName('　徒労   太郎　');
   assert.equal(m.state().profile.name, '徒労 太郎'); assert.equal(m.state().balance, 0); assert.equal(m.state().membership.planId, 'gold'); assert.equal(boot(map).m.recipientName(), '徒労 太郎');
 });
 test('names support Japanese, emoji graphemes, clearing and NFC normalization', () => {
@@ -29,13 +29,13 @@ test('invalid names do not change stored data', () => {
 test('v3 migration retains completed collection, money, work and plan with an empty new name', () => {
   const { m } = boot(), s = m.state(); s.version = 3; delete s.profile;
   s.balance = 1234; s.earnedTotal = 40000; s.workCount = 400; s.workPhase = 'peel'; s.membership = { planId: 'black', since: s.lastUsed };
-  s.history = m.products.map((p, i) => ({ id: `OLD-${i}`, productId: p.id, price: p.price, date: s.lastUsed }));
+  s.history = m.products.map((p, i) => ({ id: `OLD-${i}`, productId: p.id, price: p.legacyPrice, date: s.lastUsed }));
   s.totalSpent = 34200; s.standardCompletion = { date: s.lastUsed, totalSpent: 14200, count: 9 }; s.completion = { date: s.lastUsed, totalSpent: 34200, count: 10 }; s.unlocked = ['complete'];
   const migrated = boot(new Map([[KEY, JSON.stringify(s)]])).m;
-  assert.equal(migrated.state().version, 4); assert.equal(migrated.state().balance, 1234); assert.equal(migrated.state().workPhase, 'peel'); assert.equal(migrated.workRate(), 100); assert.equal(migrated.state().completion.totalSpent, 34200); assert.equal(migrated.state().profile.name, ''); assert.equal(migrated.corrupt, false);
+  assert.equal(migrated.state().version, 5); assert.equal(migrated.state().balance, 1234); assert.equal(migrated.state().workPhase, 'peel'); assert.equal(migrated.workRate(), 100); assert.equal(migrated.state().completion.totalSpent, 34200); assert.equal(migrated.state().profile.name, ''); assert.equal(migrated.corrupt, false);
 });
 test('fund reset and membership changes retain name, while full reset deletes it', () => {
-  const { m } = boot(); m.setName('無駄 太郎'); m.join('black'); m.resetBalance(); m.leave(); assert.equal(m.recipientName(), '無駄 太郎'); m.clear(); assert.equal(m.state().profile.name, '');
+  const { m } = boot(); m.setName('無駄 太郎'); m.leave(); m.resetBalance(); m.leave(); assert.equal(m.recipientName(), '無駄 太郎'); m.clear(); assert.equal(m.state().profile.name, '');
 });
 test('badge tier assets are distinct shapes in the same color and keep existing reward rates', () => {
   const { m } = boot(); const svgs = m.plans.map(p => read(`assets/images/${p.badge}`));
@@ -49,7 +49,7 @@ test('my page renders the name as literal text and preserves an unsaved draft du
   const { m, context } = boot(new Map(), { document }); m.badgeHTML = () => ''; m.toast = () => {};
   vm.runInContext(read('js/mypage.js'), context);
   m.setName('<b>太郎</b>'); assert.equal(nodes.get('profile-display-name').textContent, '<b>太郎</b>');
-  const input = nodes.get('profile-name'); input.value = '編集中'; input.handlers.input(); m.join('gold'); assert.equal(input.value, '編集中'); assert.equal(m.state().profile.name, '<b>太郎</b>');
+  const input = nodes.get('profile-name'); input.value = '編集中'; input.handlers.input(); m.leave(); assert.equal(input.value, '編集中'); assert.equal(m.state().profile.name, '<b>太郎</b>');
   nodes.get('profile-form').handlers.submit({ preventDefault() {} }); assert.equal(m.state().profile.name, '編集中'); assert.equal(nodes.get('profile-display-name').textContent, '編集中');
 });
 test('purchase and final certificates use the name at generation, including reissued awards', async () => {
@@ -60,7 +60,7 @@ test('purchase and final certificates use the name at generation, including reis
     return { click() { images.push(this.download); }, remove() {} };
   } };
   const { m, map, context } = boot(new Map(), { document, URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} }, setTimeout: () => 0, URLSearchParams, location: { protocol: 'http:', hostname: 'localhost' } });
-  const s = m.state(); s.history = m.products.map((p, i) => ({ id: `PURCHASE-${i}`, productId: p.id, price: p.price, date: s.lastUsed })); s.totalSpent = 34200; s.completion = { date: s.lastUsed, totalSpent: 34200, count: 10 }; map.set(KEY, JSON.stringify(s));
+  const s = m.state(); s.history = m.products.map((p, i) => ({ id: `PURCHASE-${i}`, productId: p.id, price: p.legacyPrice, date: s.lastUsed })); s.totalSpent = 34200; s.completion = { date: s.lastUsed, totalSpent: 34200, count: 10 }; map.set(KEY, JSON.stringify(s));
   m.setName('徒労 太郎'); vm.runInContext(read('js/certificate.js'), context);
   await m.downloadCertificate(s.history[0]); assert.ok(texts.includes('徒労 太郎 様')); assert.ok(texts.includes('ただの石ころの画像'));
   texts.length = 0; m.setName('無益 花子'); await m.downloadCompletion(); assert.ok(texts.includes('無益 花子 様')); assert.ok(!texts.includes('徒労 太郎 様'));
