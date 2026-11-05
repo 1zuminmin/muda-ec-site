@@ -120,11 +120,15 @@
 .work-manual li strong { color: var(--paper); font-size: 12px; font-weight: 400; }
 .work-manual li span { display: block; color: var(--muted); font-size: 11px; margin-top: 8px; }
 .member-benefit p strong { font: 34px Georgia, serif; color: var(--gold-light); }
-.private-collection { margin-top: 75px; border: 1px solid var(--gold); padding: 45px; background: #1c272e; display: grid; grid-template-columns: 1fr 1fr; gap: 65px; align-items: center; scroll-margin-top: 30px; }
+.private-collection { margin-top: 50px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; align-items: start; scroll-margin-top: 30px; }
 .private-collection[hidden] { display: none; }
-.invitation-copy h2 { margin: 25px 0; font-size: 35px; }
+.invitation-copy { grid-column: 1; border-top: 1px solid var(--gold); padding-top: 28px; }
+.invitation-copy h2 { margin: 25px 0; font-size: 26px; }
 .invitation-copy > p:not(.eyebrow) { color: #c2c0b7; font-size: 13px; line-height: 2.4; margin-bottom: 25px; }
-.private-product { min-width: 0; }
+.private-product { grid-column: 2; min-width: 0; }
+@media (min-width: 761px) and (max-width: 1050px) {
+  .private-collection { column-gap: 20px; }
+}
 .earning-wallet { display: flex; justify-content: space-between; align-items: center; gap: 25px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 23px 0; margin-bottom: 35px; }
 .earning-wallet > span { color: var(--muted); font-size: 12px; }
 .earning-wallet > strong { color: var(--gold-light); font: 36px Georgia, serif; margin-right: auto; }
@@ -237,7 +241,8 @@
   .work-envelope[data-phase="peel"] .envelope-seal { top: 61px; }
   .table-caption { font-size: 8px; }
   .rate-card, .work-manual { padding: 26px; }
-  .private-collection { grid-template-columns: 1fr; padding: 25px; gap: 30px; margin-top: 50px; }
+  .private-collection { grid-template-columns: 1fr; gap: 30px; margin-top: 50px; }
+  .invitation-copy, .private-product { grid-column: 1; }
   .invitation-copy h2 { font-size: 29px; }
   .site-header { min-width: 0; }
   .site-header nav { min-width: 0; overflow-x: auto; justify-content: flex-start; gap: 25px; scrollbar-width: thin; }
