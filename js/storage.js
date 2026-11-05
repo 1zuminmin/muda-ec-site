@@ -27,9 +27,9 @@
     { id: 'complete', name: '真の無駄使いyer', description: '特別なご案内を含む全10種類を購入する', target: products.length, type: 'unique', symbol: 'Ⅸ' }
   ]);
   const plans = Object.freeze([
-    { id: 'ordinary', name: '紅蓮', english: 'RED', tagline: 'まずは、品のある無駄から。', rate: 20, rank: 'Ⅰ', badge: 'insignia-1.svg', badgeDescription: '一段の山形を持つ盾章', level: 1 },
-    { id: 'gold', name: '金剛', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, rank: 'Ⅱ', badge: 'insignia-2.svg', badgeDescription: '二段の山形と一つ星を持つ盾章', level: 2 },
-    { id: 'black', name: '黒曜', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, rank: 'Ⅲ', badge: 'insignia-3.svg', badgeDescription: '三段の山形と三つ星、月桂樹を持つ盾章', level: 3 }
+    { id: 'ordinary', name: '正会員', english: 'RED', tagline: 'まずは、品のある無駄から。', rate: 20, rank: 'Ⅰ', badge: 'insignia-1.svg', badgeDescription: '一段の山形を持つ盾章', level: 1 },
+    { id: 'gold', name: '特別会員', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, rank: 'Ⅱ', badge: 'insignia-2.svg', badgeDescription: '二段の山形と一つ星を持つ盾章', level: 2 },
+    { id: 'black', name: '名誉会員', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, rank: 'Ⅲ', badge: 'insignia-3.svg', badgeDescription: '三段の山形と三つ星、月桂樹を持つ盾章', level: 3 }
   ]);
   const initial = () => ({ version: 4, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
   const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja', { granularity: 'grapheme' }) : null;

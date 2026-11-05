@@ -12,7 +12,7 @@
   function render() {
     const s = M.state(), plan = M.memberPlan(s), latest = s.history.at(-1);
     document.getElementById('profile-display-name').textContent = M.recipientName(s);
-    document.getElementById('profile-rank').textContent = plan ? `第${plan.level}位　${plan.english} / ${plan.name}` : '未入会';
+    document.getElementById('profile-rank').textContent = plan ? `${plan.english} / ${plan.name}` : '未入会';
     document.getElementById('profile-insignia').innerHTML = M.badgeHTML(plan);
     document.getElementById('profile-insignia-description').textContent = plan?.badgeDescription || '山形のない盾章';
     document.getElementById('profile-spent').textContent = M.money(s.totalSpent);

@@ -12,7 +12,6 @@
 .header-profile .member-insignia { width: 32px; height: 40px; }
 .plan-insignia { display: flex; align-items: center; gap: 18px; margin: 0 0 25px; }
 .plan-insignia .member-insignia { width: 68px; height: 82px; }
-.plan-insignia > span { color: var(--gold-light); font: 20px var(--serif); }
 .plan-grid .plan-card h2 { font-size: 24px; line-height: 1.8; overflow-wrap: anywhere; }
 .member-current-insignia + div { margin-right: auto; }
 .member-current-insignia .member-insignia { width: 58px; height: 70px; }
