@@ -86,7 +86,15 @@
 .work-title-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 15px; }
 .phase-label { font: 10px Georgia, serif; letter-spacing: .12em; color: var(--gold); border: 1px solid var(--line); padding: 8px 11px; white-space: nowrap; }
 .envelope-table { min-height: 300px; position: relative; display: grid; place-content: center; padding: 55px 0 30px; background: #12202c; margin: 25px 0; border: 1px solid #baa57a12; }
-.work-envelope { --gesture-progress: 0; position: relative; width: min(290px, 65vw); height: 175px; border: 0; background: transparent; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; perspective: 700px; padding: 20px 0 0; }
+.work-envelope { --gesture-progress: 0; position: relative; width: min(290px, 65vw); height: 175px; border: 0; background: transparent; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; perspective: 700px; padding: 20px 0 0; }
+.work-envelope:active { cursor: grabbing; }
+.work-envelope:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 10px; }
+.work-sound-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 18px; font-size: 10px; color: var(--muted); }
+.sound-toggle { padding: 8px 12px; min-height: 40px; border: 1px solid var(--line); background: transparent; color: var(--gold-light); font-size: 10px; }
+.sound-toggle:hover { border-color: var(--gold); }
+.gesture-status { position: relative; border: 1px solid var(--line); padding: 15px 40px 15px 18px; color: var(--gold-light); font-size: 12px; }
+.gesture-status > span { position: absolute; right: 18px; top: 12px; font-size: 23px; }
+.gesture-status > small { display: block; color: var(--muted); font-size: 10px; margin-top: 5px; }
 .envelope-paper { display: block; width: 100%; height: 100%; position: relative; background: linear-gradient(135deg, #e9e2d1, #c9bc9d); border: 1px solid #b5a37c; box-shadow: 0 12px 20px #0004; }
 .envelope-paper::after { content: ''; position: absolute; inset: 30% 0 0; border: 1px solid #b5a37c80; clip-path: polygon(0 100%, 50% 0, 100% 100%); pointer-events: none; }
 .paper-brand { position: absolute; left: 0; right: 0; bottom: 23px; font: 13px var(--serif); letter-spacing: .18em; color: #77633d; }

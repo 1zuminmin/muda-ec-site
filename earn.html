@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/experience.css">
 <script defer src="js/storage.js"></script>
 <script defer src="js/main.js"></script>
+<script defer src="js/paper-sound.js"></script>
 <script defer src="js/earn.js"></script>
 </head>
 <body data-page="earn">
@@ -28,21 +29,22 @@
 <article class="earning-card work-card">
 <div class="work-title-row"><div><p class="eyebrow">THE ENVELOPE DEPARTMENT</p><h2>封筒復元係。</h2></div><span class="phase-label" id="work-phase">01 / SEAL</span></div>
 <p class="earning-lead" id="work-instruction">糊を塗って、封をしてください。</p>
-<p class="subtle" id="gesture-hint">封筒を右へなぞるか、タップしてください。</p>
+<p class="subtle" id="gesture-hint">封筒に指を置き、右へなぞってください。</p>
+<div class="work-sound-row"><span>小さな紙の音とともに。</span><button class="sound-toggle" id="paper-sound-toggle" type="button" aria-pressed="true">効果音 ON</button></div>
 <div class="envelope-table">
-<button type="button" class="work-envelope" id="envelope-action" data-phase="seal" aria-label="封筒に糊を塗って閉じる" aria-describedby="gesture-hint">
+<div class="work-envelope" id="envelope-action" data-phase="seal" tabindex="0" role="group" aria-label="封筒の作業台。右へなぞって糊付け、上へ引き上げて開封" aria-describedby="gesture-hint keyboard-work-help">
 <span class="envelope-paper" aria-hidden="true"><span class="glue-track"><span class="glue-fill"></span></span><span class="paper-brand">伊見内商会<small>NOTHING ENCLOSED</small></span><span class="work-flap"></span><span class="envelope-seal">無</span></span>
-</button>
+</div>
 <span class="table-caption" aria-hidden="true">中身はありません。作業の意味もありません。</span>
 </div>
-<button class="button gold full" id="work-button" type="button">糊を塗って封をする <span>01 / 02</span></button>
+<div class="gesture-status" id="work-direction">右へなぞって、糊を塗る <span aria-hidden="true">→</span></div>
 <p class="work-result" id="work-result" role="status">閉じてから剥がすと、1往復分の報酬が発生します。</p>
 <div class="mini-stats"><div><span>元に戻した封筒</span><strong><b id="work-count">0</b> 通</strong></div><div><span>内職の累計報酬</span><strong id="work-earned">¥0</strong></div></div>
-<p class="fine">封筒のタップ、下のボタン、Enter・Spaceでも操作できます。途中で指を離しても、作業が完了しなければ報酬は発生しません。</p>
+<p class="fine" id="keyboard-work-help">マウス・指でなぞって操作します。クリック・タップだけでは進みません。キーボードでは作業台を選び、糊付けは→、開封は↑を長押しして離してください。</p>
 </article>
 <aside class="work-guide">
 <div class="rate-card"><p class="eyebrow">YOUR RATE FOR A ROUND TRIP</p><p class="rate-plan" id="work-plan">未入会</p><p class="current-rate"><strong id="work-rate">¥10</strong><span>架空 / 1往復</span></p><p>糊で閉じて、剥がして、元どおり。<br>完了時の会員ランクで単価が決まります。</p><a class="button outline full" href="membership.html">会員ランクを変更する ↗</a></div>
-<div class="work-manual"><p class="eyebrow">AN ENTIRELY POINTLESS PROCEDURE</p><h3>まじめな作業手順</h3><ol><li><strong>糊を塗って、閉じる。</strong><span>封筒の上を右へなぞるか、タップします。</span></li><li><strong>剥がして、開ける。</strong><span>上へ引き上げるか、もう一度タップします。</span></li><li><strong>何も変わらない。報酬だけ増える。</strong><span>同じ封筒で、何度でも繰り返せます。</span></li></ol><p class="fine">新しく始める場合の所持金は0円です。会員の入会・変更も無料です。</p></div>
+<div class="work-manual"><p class="eyebrow">AN ENTIRELY POINTLESS PROCEDURE</p><h3>まじめな作業手順</h3><ol><li><strong>糊を塗って、閉じる。</strong><span>封筒に指を置き、右へなぞってから離します。</span></li><li><strong>剥がして、開ける。</strong><span>封筒に指を置き、上へ引き上げてから離します。</span></li><li><strong>何も変わらない。報酬だけ増える。</strong><span>同じ封筒で、何度でも繰り返せます。</span></li></ol><p class="fine">新しく始める場合の所持金は0円です。会員の入会・変更も無料です。</p></div>
 </aside>
 </div>
 </section>
