@@ -17,7 +17,7 @@ function boot() {
   vm.runInContext(read('js/storage.js'), context);
   return { m: window.Muda, context, node, events, map, window };
 }
-test('honors show a denominator of eight with the secret card fifth before and after completion', () => {
+test('honors start out of eight, expand at eight and retain the secret card in the center', () => {
   const b = boot();
   vm.runInContext(read('js/achievements.js'), b.context);
   assert.equal(b.node('overall-progress').max, 8);
@@ -31,11 +31,30 @@ test('honors show a denominator of eight with the secret card fifth before and a
   s.completion = { date: s.lastUsed, totalSpent: 171000, count: 10 };
   b.map.set('muda-shokai:v1', JSON.stringify(s));
   b.window.dispatchEvent(new Event('muda:update'));
-  assert.equal(b.node('unlocked-count').textContent, 8);
+  assert.equal(b.node('unlocked-count').textContent, 9);
+  assert.equal(b.node('overall-progress').max, 9);
   assert.equal(b.node('overall-percent').textContent, '100%');
   cards = b.node('achievements-list').innerHTML.split('<article').slice(1);
   assert.match(cards[4], /真の無駄使いyer/);
   assert.match(cards[4], /解除済み/);
+});
+test('collection and honor denominators expand independently and repeated purchases do not advance the target', () => {
+  const b = boot(), s = b.m.state();
+  const purchase = (p, i) => ({ id: `TEST-${i}`, productId: p.id, price: p.price, date: s.lastUsed });
+  for (const [count, total] of [[0, 8], [1, 8], [7, 8], [8, 9], [9, 10], [10, 10]]) {
+    s.history = b.m.products.slice(0, count).map(purchase);
+    assert.equal(b.m.collectionProgress(s).count, count);
+    assert.equal(b.m.collectionProgress(s).total, total);
+  }
+  s.history = Array.from({ length: 8 }, (_, i) => purchase(b.m.products[0], i));
+  assert.equal(b.m.collectionProgress(s).count, 1);
+  assert.equal(b.m.collectionProgress(s).total, 8);
+  s.unlocked = b.m.regularAchievements.slice(0, 7).map(a => a.id);
+  assert.equal(b.m.honorProgress(s).total, 8);
+  s.unlocked = b.m.regularAchievements.map(a => a.id);
+  assert.equal(b.m.honorProgress(s).count, 8);
+  assert.equal(b.m.honorProgress(s).total, 9);
+  assert.equal(b.m.collectionProgress(s).total, 8);
 });
 test('membership UI shows dues, disables insufficient confirmation and quotes upgrade differences', () => {
   const b = boot(); b.m.badgeHTML = () => ''; b.m.toast = () => {};

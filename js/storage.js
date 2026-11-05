@@ -123,6 +123,14 @@
     products, regularProducts, achievements, plans, state, joinQuote,
     regularAchievements: achievements.filter(a => a.id !== 'complete'),
     regularHonorCount: (s = state()) => achievements.filter(a => a.id !== 'complete' && s.unlocked.includes(a.id)).length, valueFor, nameLength,
+    honorProgress(s = state()) {
+      const regular = achievements.filter(a => a.id !== 'complete' && s.unlocked.includes(a.id)).length;
+      return { count: regular + (s.unlocked.includes('complete') ? 1 : 0), total: regular >= 8 || s.unlocked.includes('complete') ? 9 : 8 };
+    },
+    collectionProgress(s = state()) {
+      const count = owned(s).size;
+      return { count, total: count < 8 ? 8 : count < 9 ? 9 : products.length };
+    },
     recipientName: (s = state()) => s.profile.name || '名もなき浪費家',
     memberPlan: (s = state()) => plans.find(p => p.id === s.membership?.planId) || null,
     setName(value) { const name = normalizeName(value), s = state(); s.profile = { name }; save(s); return name; },

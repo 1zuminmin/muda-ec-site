@@ -1,11 +1,11 @@
 (() => {
   const M = window.Muda;
   function render() {
-    const s = M.state();
-    document.getElementById('unlocked-count').textContent = M.regularHonorCount(s);
-    document.getElementById('overall-progress').max = M.regularAchievements.length;
-    document.getElementById('overall-progress').value = M.regularHonorCount(s);
-    document.getElementById('overall-percent').textContent = Math.round(M.regularHonorCount(s) / M.regularAchievements.length * 100) + '%';
+    const s = M.state(), progress = M.honorProgress(s);
+    document.getElementById('unlocked-count').textContent = progress.count;
+    document.getElementById('overall-progress').max = progress.total;
+    document.getElementById('overall-progress').value = progress.count;
+    document.getElementById('overall-percent').textContent = Math.round(progress.count / progress.total * 100) + '%';
     document.getElementById('achievements-list').innerHTML = [...M.regularAchievements.slice(0, 4), M.achievements.find(a => a.id === 'complete'), ...M.regularAchievements.slice(4)].map((a) => {
       const unlocked = s.unlocked.includes(a.id), value = Math.min(a.target, M.valueFor(a, s));
       const unit = ['spent', 'earned'].includes(a.type) ? '円' : ['unique', 'regular'].includes(a.type) ? '種類' : '回';
