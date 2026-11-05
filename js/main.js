@@ -2,9 +2,35 @@
   'use strict';
   const M = window.Muda;
   const page = document.body.dataset.page;
-  document.getElementById('site-header').innerHTML = `<header class="site-header"><a class="brand" href="index.html" aria-label="無駄遣い商会 ホーム"><img src="assets/images/mark.svg" width="40" height="40" alt=""><span>無駄遣い商会<small>MUDAZUKAI SHOKAI</small></span></a><nav aria-label="メインナビゲーション"><a href="index.html" ${page === 'home' ? 'aria-current="page"' : ''}>商会について</a><a href="shop.html" ${page === 'shop' ? 'aria-current="page"' : ''}>商品一覧</a><a href="achievements.html" ${page === 'achievements' ? 'aria-current="page"' : ''}>実績</a></nav><a class="header-wallet" href="shop.html"><span>架空の所持金</span><strong data-balance>¥10,000</strong></a></header>`;
-  document.getElementById('site-footer').innerHTML = `<footer class="site-footer section"><div class="footer-top"><a class="brand" href="index.html"><img src="assets/images/mark.svg" width="36" height="36" alt=""><span>無駄遣い商会<small>MUDAZUKAI SHOKAI</small></span></a><p>あなたのお金を、全力で無駄にする場所。</p></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} 無駄遣い商会</span><span>架空の購入・実際の支払いなし。すべて無料のシミュレーションです。</span></div><p class="storage-note">記録はこのブラウザに保存されます。ブラウザのデータを削除すると記録は失われます。</p></footer>`;
-  M.card = (p, index, buying = false) => `<article class="product-card"><${buying ? 'div' : 'a href="shop.html"'} class="product-image"><img src="assets/images/${p.image}" alt="${p.name}" loading="lazy"><span class="product-number">N° 00${index + 1}</span><span class="product-label">${p.id === 'void' ? '何もない、という完成形。' : p.id === 'dot' ? '一点の、曇りなき無意味。' : 'どこにでもある、特別。'}</span></${buying ? 'div' : 'a'}><div class="product-info"><p class="eyebrow">${p.english}</p><div class="product-title"><h3>${p.name}</h3><span>${M.money(p.price)}<small>架空</small></span></div><p class="product-description">${p.description}</p>${buying ? `<button class="button buy-button" data-buy="${p.id}">架空購入する <span>↗</span></button>` : '<a class="product-more" href="shop.html">この無駄を詳しく <span>↗</span></a>'}</div></article>`;
+  const links = [{ page: 'home', href: 'index.html', name: '商会について' }, { page: 'shop', href: 'shop.html', name: '商品一覧' }, { page: 'earn', href: 'earn.html', name: '資金づくり' }, { page: 'achievements', href: 'achievements.html', name: '実績' }, { page: 'membership', href: 'membership.html', name: '会員サロン' }];
+  document.getElementById('site-header').innerHTML = `<header class="site-header"><a class="brand" href="index.html" aria-label="伊見内商会 ホーム"><img src="assets/images/mark.svg" width="40" height="40" alt=""><span>伊見内商会<small>IMINAI SHOKAI</small></span></a><nav aria-label="メインナビゲーション">${links.map(l => `<a href="${l.href}" ${page === l.page ? 'aria-current="page"' : ''}>${l.name}</a>`).join('')}</nav><a class="header-wallet" href="earn.html"><span>架空の所持金</span><strong data-balance>¥10,000</strong></a></header>`;
+  document.getElementById('site-footer').innerHTML = `<footer class="site-footer section"><div class="footer-top"><a class="brand" href="index.html"><img src="assets/images/mark.svg" width="36" height="36" alt=""><span>伊見内商会<small>IMINAI SHOKAI</small></span></a><p>あなたのお金を、全力で無駄にする場所。</p></div><nav class="footer-links" aria-label="フッターナビゲーション"><a href="earn.html">資金づくり</a><a href="membership.html">会員サロン</a><a href="author.html" ${page === 'author' ? 'aria-current="page"' : ''}>作者のボヤキ ↗</a></nav><div class="footer-bottom"><span>© ${new Date().getFullYear()} 伊見内商会</span><span>架空の購入・実際の支払いなし。すべて無料のシミュレーションです。</span></div><p class="storage-note">記録はこのブラウザに保存されます。ブラウザのデータを削除すると記録は失われます。</p></footer>`;
+  M.card = (p, index, buying = false) => `<article class="product-card" data-product="${p.id}"><${buying ? 'div' : `a href="product.html?id=${p.id}"`} class="product-image"><img src="assets/images/${p.image}" alt="${p.name}" loading="lazy"><span class="product-number">N° ${String(index + 1).padStart(3, '0')}</span><span class="product-label">${p.id === 'void' ? '何もない、という完成形。' : p.id === 'dot' ? '一点の、曇りなき無意味。' : p.id === 'stone' ? 'どこにでもある、特別。' : '必要ないから、美しい。'}</span></${buying ? 'div' : 'a'}><div class="product-info"><p class="eyebrow">${p.english}</p><div class="product-title"><h3>${p.name}</h3><span>${M.money(p.price)}<small>架空</small></span></div><p class="product-description">${p.description}</p>${buying ? `<a class="product-more" href="product.html?id=${p.id}">詳細・架空レビューを見る <span>↗</span></a><p class="owned-label" data-owned="${p.id}"></p><button class="button buy-button" data-buy="${p.id}">架空購入する <span>↗</span></button>` : `<a class="product-more" href="product.html?id=${p.id}">詳細・架空レビューを見る <span>↗</span></a>`}</div></article>`;
+  M.completionText = 'あなたは真の無駄使いyerです。あなたはお金だけでなく、時間も無駄にしてくれました。ありがとうございました。';
+  M.xShareURL = text => {
+    const params = new URLSearchParams({ text });
+    if (['http:', 'https:'].includes(location.protocol) && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) params.set('url', new URL('index.html', location.href).href);
+    return 'https://twitter.com/intent/tweet?' + params;
+  };
+  M.summaryShareURL = () => {
+    const s = M.state(), count = new Set(s.history.map(p => p.productId)).size;
+    return M.xShareURL(`伊見内商会で累計${M.money(s.totalSpent)}を無駄にしました。\n無用の品 ${count} / ${M.products.length}種類。${s.completion ? '\n全商品制覇。真の無駄使いyerになりました。' : '\nここまでの無意味を、ご報告いたします。'}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`);
+  };
+  M.notifyAchievements = newly => newly.forEach((a, i) => setTimeout(() => M.toast('実績解除 — ' + a.name, a.description), i * 700));
+  function renderCollection(s) {
+    const node = document.getElementById('collection-status');
+    if (!node) return;
+    const count = new Set(s.history.map(p => p.productId)).size;
+    node.innerHTML = s.completion ? `<section class="completion-board" aria-label="全商品購入の感謝状"><p class="eyebrow">WITH OUR DEEPEST, MOST USELESS GRATITUDE</p><div class="completion-mark" aria-hidden="true">◇</div><h2>すべての無意味を、あなたへ。</h2><p class="completion-quote">${M.completionText}</p><p class="subtle">全${M.products.length}種類を収集 ／ 達成時の累計 ${M.money(s.completion.totalSpent)}（架空）</p><div class="inline-actions"><button class="button gold" data-download-completion>感謝状をPNGで保存 ↓</button><a class="button outline" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">全クリアをXで共有 ↗</a></div><p class="fine">会員番号の発行は今後対応予定です。感謝状は何度でも保存できます。</p></section>` : `<section class="collection-progress"><div><p class="eyebrow">YOUR COLLECTION</p><h3>無用の品を、ひとつずつ。</h3><p>全商品を集めると、弊社より心からの感謝状を。</p></div><div class="collection-progress-detail"><label for="collection-progress"><strong>${count} <small>/ ${M.products.length}種類</small></strong><span>累計 ${M.money(s.totalSpent)}（架空）</span></label><progress id="collection-progress" max="${M.products.length}" value="${count}">${count} / ${M.products.length}</progress><a class="text-link" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">ここまでの無駄遣いをXで共有 ↗</a></div></section>`;
+  }
+  document.addEventListener('click', async e => {
+    const button = e.target.closest('[data-download-completion]');
+    if (!button) return;
+    button.disabled = true;
+    try { await M.downloadCompletion(); M.toast('心より、御礼申し上げます。', '全商品購入の感謝状を保存しました。'); }
+    catch (e) { M.toast('感謝状を保存できませんでした。', e.message); }
+    finally { button.disabled = false; }
+  });
   M.toast = (title, message = '') => {
     const toast = document.createElement('div'); toast.className = 'toast';
     const strong = document.createElement('strong'); strong.textContent = title; toast.append(strong);
@@ -16,13 +42,18 @@
     const s = M.state();
     document.querySelectorAll('[data-balance]').forEach(el => el.textContent = M.money(s.balance));
     document.querySelectorAll('[data-stat]').forEach(el => el.textContent = el.dataset.stat === 'spent' ? M.money(s.totalSpent) : el.dataset.stat === 'count' ? s.history.length : s.unlocked.length);
+    document.querySelectorAll('[data-achievement-total]').forEach(el => el.textContent = M.achievements.length);
+    document.querySelectorAll('[data-product-total]').forEach(el => el.textContent = M.products.length);
+    document.querySelectorAll('[data-owned]').forEach(el => el.textContent = s.history.some(p => p.productId === el.dataset.owned) ? '✓ コレクション済み' : '未収集');
+    document.querySelectorAll('[data-share-summary]').forEach(el => el.href = M.summaryShareURL());
+    renderCollection(s);
     if (!M.persistent && !document.querySelector('.storage-warning')) {
       const warning = document.createElement('p'); warning.className = 'storage-warning'; warning.setAttribute('role', 'status');
       warning.textContent = M.corrupt ? '保存済みの記録を読み込めませんでした。元の記録は保護されています。現在は一時モードです。ショップの「すべての記録を削除」で初期化できます。' : 'ブラウザに保存できません。現在の記録はこのページを閉じると失われます。保存領域の空きとブラウザの設定をご確認ください。';
       document.querySelector('main').prepend(warning);
     } else if (M.persistent) document.querySelector('.storage-warning')?.remove();
   }
-  document.getElementById('featured-products')?.insertAdjacentHTML('beforeend', M.products.map((p, i) => M.card(p, i)).join(''));
+  document.getElementById('featured-products')?.insertAdjacentHTML('beforeend', M.products.slice(0, 3).map((p, i) => M.card(p, i)).join(''));
   window.addEventListener('muda:update', update); update();
   if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const observer = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } }), { threshold: 0.08 });
