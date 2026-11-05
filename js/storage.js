@@ -11,7 +11,7 @@
     { id: 'receipt', name: '領収書のための領収書', price: 7500, legacyPrice: 1500, english: 'THE RECURSIVE RECEIPT', image: 'receipt-photo.png', description: '領収書を手に入れたことを証明するための、架空の領収書です。経費としての用途は一切ありません。', message: '何を買ったかはともかく、買ったという事実だけは残りました。' },
     { id: 'sigh', name: '熟成されたため息', price: 10000, legacyPrice: 2000, english: 'THE AGED SIGH', image: 'sigh-photo.png', description: '長い会議の終わりを思わせる、深い余韻。音声は付属いたしません。ため息はお客様自身でお願いいたします。', message: 'はぁ。そのひと言で、品質をご実感いただけたかと存じます。' },
     { id: 'waiting', name: '永遠の待機画面', price: 15000, legacyPrice: 3000, english: 'THE ETERNAL WAIT', image: 'waiting-photo.png', description: '完了することのない待ち時間を、静止画に封じ込めました。読み込みが終わる見込みはございません。', message: 'まもなく完了いたします、という気持ちだけお届けします。' },
-    { id: 'right', name: '何もしない権利', price: 25000, legacyPrice: 5000, english: 'THE RIGHT TO DO NOTHING', image: 'right-deed-photo.png', description: '何もしないことを、弊社が勝手に肯定いたします。法的効力はありませんが、休憩の口実にはなるかもしれません。', message: '本日はもう、何もなさらなくて結構です。もともと、その権利はございました。' },
+    { id: 'right', name: '何もしない権利', price: 25000, legacyPrice: 5000, english: 'THE RIGHT TO DO NOTHING', image: 'right-deed-blank-photo.png', description: '何もしないことを、弊社が勝手に肯定いたします。法的効力はありませんが、休憩の口実にはなるかもしれません。', message: '本日はもう、何もなさらなくて結構です。もともと、その権利はございました。' },
     { id: 'final-envelope', name: '元に戻された封筒', price: 100000, legacyPrice: 20000, english: 'THE PERFECTLY RESTORED ENVELOPE', image: 'final-envelope-photo.png', secret: true, description: '幾度も糊で閉じられ、そのたびに剥がされた封筒。その果てにたどり着いたのは、作業前とまったく同じ姿でした。お得意様だけにお届けする、究極の徒労の記念品です。実物は付属いたしません。', message: 'あなたが閉じて、剥がしてきた時間を、ここに買い戻していただきました。封筒は元どおり。お時間は戻りません。' }
   ]);
   const regularProducts = products.filter(p => !p.secret);

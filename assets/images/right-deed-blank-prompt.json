@@ -1,0 +1,7 @@
+{
+  "tool": "Built-in ImageGen",
+  "created": "2026-11-06",
+  "file": "right-deed-blank-photo.png",
+  "reference": "right-deed-photo.png",
+  "prompt": "Use case: precise-object-edit.\nEdit the provided fictional Japanese legal deed product photograph with ONLY these changes:\n1. Main large boxed title: replace \"何もしない権利書\" with exactly \"不作為権利書\" in the same heavy traditional Japanese Mincho type, nicely centered.\n2. First row of the table, headed \"権利者\": remove ALL text from the right-hand cell (\"名もなき浪費家 様\"), leaving that cell completely BLANK with the same paper texture, preserving its border and the label \"権利者\". No name, no honorific, no placeholder, no gray bar.\nKeep everything else unchanged: paper edges, creases, texture, geometric border, dark navy background, diamond mark, 伊見内商会, [ 不作為権 設定 ], table rows, vertical body text, red fictional stamp, and the small bottom disclaimer \"架空の権利書・法的効力はありません\". Retain the square photorealistic image and original framing."
+}
