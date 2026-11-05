@@ -13,3 +13,7 @@ Use case: product-mockup. Asset type: luxury Japanese satirical shop hero and pr
 ## 2026年11月6日の商品写真
 
 石は既存の写真を継続使用し、残る9商品に `*-photo.png` を追加しました。内蔵ImageGenで新規生成した写実的な演出画像で、実在の商品写真ではありません。元のSVGは保存しています。生成プロンプト全文は `photo-prompts.json` に記録しています。ダークな展示空間・控えめなスポットライトで統一し、商品詳細にも生成画像であることを表示しています。
+
+## 何もしない権利書（2026年11月6日）
+
+`right-certificate-photo.png` は内蔵ImageGenで新規生成した商品写真です。紙の質感・金箔の縁取りを持つ権利書に「何もしない権利書」「法的効力はありません」と記載しています。商品「何もしない権利」の画像として使用し、旧版の椅子の写真 `right-photo.png` は保存しています。生成プロンプト全文は `right-certificate-prompt.json` を参照してください。
