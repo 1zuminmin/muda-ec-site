@@ -32,7 +32,7 @@ test('v3 migration retains completed collection, money, work and plan with an em
   s.history = m.products.map((p, i) => ({ id: `OLD-${i}`, productId: p.id, price: p.legacyPrice, date: s.lastUsed }));
   s.totalSpent = 34200; s.standardCompletion = { date: s.lastUsed, totalSpent: 14200, count: 9 }; s.completion = { date: s.lastUsed, totalSpent: 34200, count: 10 }; s.unlocked = ['complete'];
   const migrated = boot(new Map([[KEY, JSON.stringify(s)]])).m;
-  assert.equal(migrated.state().version, 5); assert.equal(migrated.state().balance, 1234); assert.equal(migrated.state().workPhase, 'peel'); assert.equal(migrated.workRate(), 100); assert.equal(migrated.state().completion.totalSpent, 34200); assert.equal(migrated.state().profile.name, ''); assert.equal(migrated.corrupt, false);
+  assert.equal(migrated.state().version, 6); assert.equal(migrated.state().balance, 1234); assert.equal(migrated.state().workPhase, 'peel'); assert.equal(migrated.workRate(), 100); assert.equal(migrated.state().completion.totalSpent, 34200); assert.equal(migrated.state().profile.name, ''); assert.equal(migrated.corrupt, false);
 });
 test('fund reset and membership changes retain name, while full reset deletes it', () => {
   const { m } = boot(); m.setName('無駄 太郎'); m.leave(); m.resetBalance(); m.leave(); assert.equal(m.recipientName(), '無駄 太郎'); m.clear(); assert.equal(m.state().profile.name, '');

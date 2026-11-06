@@ -203,6 +203,28 @@
 .legal-copy p { color: #bdc3c6; font-size: 13px; line-height: 2.3; margin-bottom: 15px; }
 .legal-copy a { color: var(--gold-light); text-decoration: underline; text-underline-offset: 4px; }
 .legal-copy code { overflow-wrap: anywhere; }
+.honor-roll-section { padding-top: 0; }
+.honor-roll-list { list-style: none; padding: 0; margin: 0 0 50px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.honor-roll-entry { padding: 30px; text-align: center; border: 1px solid var(--line); background: #182733; }
+.honor-roll-mark { display: block; color: var(--gold); font: 32px Georgia, serif; margin-bottom: 18px; }
+.honor-roll-entry h3 { font: 22px/1.8 var(--serif); color: var(--gold-light); overflow-wrap: anywhere; }
+.honor-roll-entry time { display: block; font-size: 11px; color: var(--muted); margin-top: 14px; }
+.honor-roll-empty { text-align: center; padding: 55px 25px; border: 1px solid var(--line); margin-bottom: 35px; }
+.honor-roll-empty > span { display: block; font-size: 36px; color: var(--gold); margin-bottom: 20px; }
+.honor-roll-empty h3 { font: 26px/1.8 var(--serif); margin-bottom: 15px; }
+.honor-roll-empty p, .honor-roll-request p, .honor-roll-request li { color: var(--muted); font-size: 13px; line-height: 2.3; }
+.honor-roll-local { padding: 30px; background: #182733; border-left: 2px solid var(--gold); margin-bottom: 45px; }
+.honor-roll-local h2, .honor-roll-request h2 { font: 26px/1.8 var(--serif); margin: 16px 0; }
+.honor-roll-local p:not(.eyebrow) { margin-bottom: 18px; }
+.honor-roll-request { max-width: 780px; border-top: 1px solid var(--line); padding-top: 35px; margin-bottom: 45px; scroll-margin-top: 30px; }
+.honor-roll-request ol { padding-left: 1.5em; margin: 20px 0; }
+.honor-roll-request .button { margin: 20px 0; }
+.honor-roll-request a:not(.button) { color: var(--gold-light); text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 760px) {
+  .honor-roll-list { grid-template-columns: 1fr; }
+  .honor-roll-local, .creator-card { padding: 24px; }
+  .honor-roll-local h2, .honor-roll-request h2 { font-size: 22px; }
+}
 .breadcrumb { display: flex; flex-wrap: wrap; gap: 14px; font-size: 10px; color: var(--muted); margin-bottom: 35px; }
 .breadcrumb a { color: var(--gold-light); }
 .product-detail-section { padding-top: 35px; }

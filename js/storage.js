@@ -18,11 +18,11 @@
   const achievements = Object.freeze([
     { id: 'first', name: '初めての後悔', description: '初めて商品を購入する', target: 1, type: 'count', symbol: 'Ⅰ' },
     { id: 'planned', name: '計画的な浪費', description: '累計500円を無駄にする', target: 500, type: 'spent', symbol: 'Ⅱ' },
-    { id: 'return', name: '引き返せない人', description: '累計1,000円を無駄にする', target: 1000, type: 'spent', symbol: 'Ⅲ' },
-    { id: 'master', name: '浪費の達人', description: '累計5,000円を無駄にする', target: 5000, type: 'spent', symbol: 'Ⅳ' },
+    { id: 'red-worker', name: '正会員の徒労', description: 'RED会員として内職で10,000円を稼ぐ（500往復分）', target: 10000, type: 'member-earned', planId: 'ordinary', symbol: 'Ⅲ' },
+    { id: 'gold-worker', name: '特別会員の徒労', description: 'GOLD会員として内職で25,000円を稼ぐ（500往復分）', target: 25000, type: 'member-earned', planId: 'gold', symbol: 'Ⅳ' },
     { id: 'collection', name: '完全なる虚無', description: '異なる3種類の商品を購入する', target: 3, type: 'unique', symbol: 'Ⅴ' },
     { id: 'ultimate', name: '無駄遣いの極致', description: '累計10,000円を無駄にする', target: 10000, type: 'spent', symbol: 'Ⅵ' },
-    { id: 'worker', name: '勤勉なる浪費家', description: '内職で累計100円を稼ぐ', target: 100, type: 'earned', symbol: 'Ⅶ' },
+    { id: 'black-worker', name: '名誉会員の徒労', description: 'BLACK会員として内職で50,000円を稼ぐ（500往復分）', target: 50000, type: 'member-earned', planId: 'black', symbol: 'Ⅶ' },
     { id: 'regular', name: 'お得意様', description: '通常9種類の商品を購入する', target: regularProducts.length, type: 'regular', symbol: 'Ⅷ' },
     { id: 'complete', name: '真の無駄使いyer', description: '特別なご案内を含む全10種類を購入する', target: products.length, type: 'unique', symbol: 'Ⅸ' }
   ]);
@@ -31,7 +31,7 @@
     { id: 'gold', name: '特別会員', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, fee: 5000, requiredProducts: 2, rank: 'Ⅱ', badge: 'insignia-2.svg', badgeDescription: '竹葉と二段の山形を持つ盾章', level: 2 },
     { id: 'black', name: '名誉会員', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, fee: 10000, requiredProducts: 3, rank: 'Ⅲ', badge: 'insignia-3.svg', badgeDescription: '松葉と三段の山形、月桂樹を持つ盾章', level: 3 }
   ]);
-  const initial = () => ({ version: 5, membershipCredit: 0, membershipSpent: 0, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
+  const initial = () => ({ version: 6, earnedByPlan: { ordinary: 0, gold: 0, black: 0 }, membershipCredit: 0, membershipSpent: 0, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
   const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja', { granularity: 'grapheme' }) : null;
   const nameLength = name => segmenter ? Array.from(segmenter.segment(name)).length : Array.from(name).length;
   function normalizeName(value) {
@@ -49,14 +49,14 @@
   const regularCount = s => regularProducts.filter(p => owned(s).has(p.id)).length;
   const specialUnlocked = s => regularCount(s) === regularProducts.length;
   const isComplete = s => products.every(p => owned(s).has(p.id));
-  const valueFor = (a, s) => a.type === 'count' ? s.history.length : a.type === 'unique' ? owned(s).size : a.type === 'regular' ? regularCount(s) : a.type === 'earned' ? s.earnedTotal : s.totalSpent;
+  const valueFor = (a, s) => a.type === 'count' ? s.history.length : a.type === 'unique' ? owned(s).size : a.type === 'regular' ? regularCount(s) : a.type === 'member-earned' ? s.earnedByPlan[a.planId] : a.type === 'earned' ? s.earnedTotal : s.totalSpent;
   const workRate = s => plans.find(p => p.id === s.membership?.planId)?.rate ?? 10;
   let fallback = initial(), available = true, corrupt = false;
   const integer = n => Number.isSafeInteger(n) && n >= 0;
   const dateValid = d => typeof d === 'string' && Number.isFinite(Date.parse(d));
   const snapshotValid = r => r && dateValid(r.date) && integer(r.totalSpent) && integer(r.count);
   function baseValid(s) {
-    return s && [1, 2, 3, 4, 5].includes(s.version) && integer(s.balance) && integer(s.totalSpent) && Array.isArray(s.history) && s.history.every(p => products.some(a => a.id === p.productId && (a.price === p.price || a.legacyPrice === p.price)) && typeof p.id === 'string' && /^[A-Za-z0-9-]+$/.test(p.id) && dateValid(p.date)) && s.history.reduce((sum, p) => sum + p.price, 0) === s.totalSpent && Array.isArray(s.unlocked) && s.unlocked.every(id => achievements.some(a => a.id === id)) && dateValid(s.lastUsed);
+    return s && [1, 2, 3, 4, 5, 6].includes(s.version) && integer(s.balance) && integer(s.totalSpent) && Array.isArray(s.history) && s.history.every(p => products.some(a => a.id === p.productId && (a.price === p.price || a.legacyPrice === p.price)) && typeof p.id === 'string' && /^[A-Za-z0-9-]+$/.test(p.id) && dateValid(p.date)) && s.history.reduce((sum, p) => sum + p.price, 0) === s.totalSpent && Array.isArray(s.unlocked) && s.unlocked.every(id => achievements.some(a => a.id === id) || (s.version < 6 && ['return', 'master', 'worker'].includes(id))) && dateValid(s.lastUsed);
   }
   // Only used to safely retire an in-progress result from the previous release.
   function oldRoundValid(r) {
@@ -67,9 +67,10 @@
     if (s.version === 1) return true;
     if (!integer(s.workCount) || !integer(s.workLastAt) || !integer(s.earnedTotal) || !(s.membership === null || (plans.some(p => p.id === s.membership.planId) && dateValid(s.membership.since)))) return false;
     if (s.version === 2) return s.earnedTotal === s.workCount * 10 && Array.isArray(s.rounds) && (s.pendingRound === null || oldRoundValid(s.pendingRound)) && (s.completion === null || snapshotValid(s.completion));
+    if (s.version >= 6 && (!s.earnedByPlan || !plans.every(p => integer(s.earnedByPlan[p.id])) || !integer(plans.reduce((sum, p) => sum + s.earnedByPlan[p.id], 0)) || plans.reduce((sum, p) => sum + s.earnedByPlan[p.id], 0) > s.earnedTotal)) return false;
     return (s.version < 5 || (integer(s.membershipCredit) && [0, ...plans.map(p => p.fee)].includes(s.membershipCredit) && integer(s.membershipSpent) && (!s.membership || s.membershipCredit >= plans.find(p => p.id === s.membership.planId).fee))) && (s.version === 3 || profileValid(s.profile)) && ['seal', 'peel'].includes(s.workPhase) && (s.standardCompletion === null || (snapshotValid(s.standardCompletion) && specialUnlocked(s))) && (s.completion === null || (snapshotValid(s.completion) && isComplete(s))) && (!owned(s).has('final-envelope') || specialUnlocked(s));
   }
-  function migrate(s) {
+  function migrateLegacy(s) {
     if (s.version === 5) return s;
     const credit = plans.find(p => p.id === s.membership?.planId)?.fee || 0;
     if (s.version >= 3) return { ...s, version: 5, profile: s.profile || { name: '' }, membershipCredit: credit, membershipSpent: 0 };
@@ -83,6 +84,13 @@
     if (!integer(next.balance)) throw new Error('Invalid migrated balance');
     if (specialUnlocked(next)) next.standardCompletion = s.completion || { date: s.lastUsed, totalSpent: s.totalSpent, count: s.history.length };
     return next;
+  }
+  function migrate(s) {
+    if (s.version === 6) return s;
+    const next = migrateLegacy(s);
+    // Earlier versions did not record which rank earned each payment.
+    // Preserve all money and records, but do not guess historical rank totals.
+    return { ...next, version: 6, earnedByPlan: { ordinary: 0, gold: 0, black: 0 }, unlocked: next.unlocked.filter(id => !['return', 'master', 'worker'].includes(id)) };
   }
   function read() {
     try {
@@ -174,6 +182,11 @@
       else {
         amount = workRate(s);
         if (!integer(s.balance + amount) || !integer(s.earnedTotal + amount) || !integer(s.workCount + 1)) throw new Error('保存できる金額の上限に達しました。');
+        const planId = s.membership?.planId;
+        if (planId) {
+          if (!integer(s.earnedByPlan[planId] + amount)) throw new Error('会員別の報酬が保存上限に達しました。');
+          s.earnedByPlan[planId] += amount;
+        }
         s.balance += amount; s.earnedTotal += amount; s.workCount++; s.workPhase = 'seal';
       }
       s.workLastAt = now;

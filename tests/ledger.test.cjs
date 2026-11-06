@@ -27,7 +27,7 @@ function collectRegular(b) { fund(b, 300000); let last; for (const p of b.m.regu
 
 function fund(b, balance) { const s = b.m.state(); s.balance = balance; b.map.set(KEY, JSON.stringify(s)); }
 test('new game starts at zero with eight regular honors and nine visible products', () => {
- const {m}=boot(); assert.equal(m.state().version,5); assert.equal(m.state().balance,0); assert.equal(m.regularAchievements.length,8); assert.equal(m.visibleProducts().length,9); assert.equal(m.startRound,undefined);
+ const {m}=boot(); assert.equal(m.state().version,6); assert.equal(m.state().balance,0); assert.equal(m.regularAchievements.length,8); assert.equal(m.visibleProducts().length,9); assert.equal(m.startRound,undefined);
 });
 test('all ten prices are five times the historical prices',()=>{const {m}=boot(); for(const p of m.products) assert.equal(p.price,p.legacyPrice*5); assert.equal(m.products.reduce((n,p)=>n+p.price,0),171000);});
 test('work requires seal then peel, survives reload and pays once',()=>{const b=boot(); assert.throws(()=>b.m.workStep('peel')); b.m.workStep('seal');assert.equal(b.m.workStep('peel'),null);b.advance();const next=boot({map:b.map,now:Date.now()+1000}).m;assert.equal(next.workStep('peel').amount,10);assert.throws(()=>b.m.workStep('peel'));assert.equal(b.m.state().balance,10);});
@@ -38,7 +38,7 @@ test('new purchases debit new prices; old history and certificates retain origin
 test('existing members inherit credit without retroactive charges and upgrade by difference',()=>{const s=legacy(2);s.membership={planId:'gold',since:s.lastUsed};const b=boot({map:new Map([[KEY,JSON.stringify(s)]])});assert.equal(b.m.state().balance,8600);assert.equal(b.m.state().membershipCredit,5000);assert.equal(b.m.state().membershipSpent,0);b.m.join('black');assert.equal(b.m.state().balance,3600);assert.equal(b.m.state().membershipSpent,5000);});
 test('v2 pending win retires and settles only once',()=>{const s=legacy(2);s.pendingRound={stake:500,die1:1,die2:1,choice:'cho',won:true};const b=boot({map:new Map([[KEY,JSON.stringify(s)]])});assert.equal(b.m.state().balance,9600);assert.equal(b.m.state().rounds,undefined);assert.equal(boot({map:b.map}).m.state().balance,9600);});
 test('hidden item is inaccessible before all nine distinct purchases',()=>{const b=boot();fund(b,300000);assert.throws(()=>b.m.buy('final-envelope'),/ご案内/);for(let i=0;i<9;i++)b.m.buy('stone');assert.equal(b.m.regularCount(),1);assert.equal(b.m.canView('final-envelope'),false);});
-test('ninth distinct item invites; final 100000 purchase completes once and persists',()=>{const b=boot();const last=collectRegular(b);assert.equal(last.invitationNow,true);assert.equal(last.completedNow,false);assert.equal(b.m.state().standardCompletion.totalSpent,71000);b.m.resetBalance();assert.throws(()=>b.m.buy('final-envelope'),/不足/);fund(b,200000);const r=b.m.buy('final-envelope');assert.equal(r.purchase.price,100000);assert.equal(r.completedNow,true);assert.equal(b.m.state().completion.totalSpent,171000);const snapshot=JSON.stringify(b.m.state().completion);assert.equal(b.m.buy('final-envelope').completedNow,false);assert.equal(JSON.stringify(boot({map:b.map}).m.state().completion),snapshot);assert.equal(b.m.regularHonorCount(),7);});
+test('ninth distinct item invites; final 100000 purchase completes once and persists',()=>{const b=boot();const last=collectRegular(b);assert.equal(last.invitationNow,true);assert.equal(last.completedNow,false);assert.equal(b.m.state().standardCompletion.totalSpent,71000);b.m.resetBalance();assert.throws(()=>b.m.buy('final-envelope'),/不足/);fund(b,200000);const r=b.m.buy('final-envelope');assert.equal(r.purchase.price,100000);assert.equal(r.completedNow,true);assert.equal(b.m.state().completion.totalSpent,171000);const snapshot=JSON.stringify(b.m.state().completion);assert.equal(b.m.buy('final-envelope').completedNow,false);assert.equal(JSON.stringify(boot({map:b.map}).m.state().completion),snapshot);assert.equal(b.m.regularHonorCount(),5);});
 test('fund reset retains dues credit, history and name; full reset clears all',()=>{const b=boot();own(b);fund(b,15000);b.m.join('black');b.m.buy('stone');b.m.setName('太郎');b.m.resetBalance();assert.equal(b.m.state().totalSpent,7500);assert.equal(b.m.state().membershipCredit,10000);assert.equal(b.m.recipientName(),'太郎');b.m.clear();assert.equal(b.m.state().membershipCredit,0);assert.equal(b.m.state().history.length,0);assert.equal(b.m.state().balance,0);});
 test('blocked storage supports temporary work; corrupt data remains untouched',()=>{const b=boot({blocked:true});earn(b,500);b.m.buy('stone');assert.equal(b.m.state().balance,0);assert.equal(b.m.persistent,false);const map=new Map([[KEY,'{broken']]);const c=boot({map});cycle(c);assert.equal(map.get(KEY),'{broken');assert.equal(c.m.corrupt,true);c.m.clear();assert.equal(c.m.state().balance,0);});
 
@@ -66,10 +66,11 @@ test('old nine-product completion remains a milestone at its original price', ()
   assert.equal(m.state().completion, null);
   assert.equal(m.state().unlocked.includes('complete'), false);
 });
-test('worker honor unlocks once and purchasing does not change income', () => {
+test('guest work does not count toward paid-member honors and purchasing does not change income', () => {
   const b = boot();
   earn(b, 90);
-  assert.deepEqual(Array.from(cycle(b).peel.newly, a => a.id), ['worker']);
+  assert.equal(cycle(b).peel.newly.length, 0);
+  assert.equal(b.m.state().earnedByPlan.ordinary, 0);
   assert.equal(cycle(b).peel.newly.length, 0);
   earn(b, 500); b.m.buy('stone');
   assert.equal(b.m.state().earnedTotal, 500);
@@ -122,4 +123,57 @@ test('existing membership remains active; rejoining rechecks the purchase requir
   assert.equal(b.m.workRate(), 100); assert.equal(b.m.corrupt, false);
   b.m.leave(); assert.throws(() => b.m.join('black'), /3種類/);
   assert.equal(b.m.state().membership, null); assert.equal(b.m.state().membershipCredit, 10000);
+});
+
+test('replacement honors at No3 No4 No7 unlock once after 500 paid round trips per rank', () => {
+  const definitions = [['ordinary', 'red-worker', 20, 2], ['gold', 'gold-worker', 50, 3], ['black', 'black-worker', 100, 6]];
+  for (const [planId, achievementId, rate, position] of definitions) {
+    const b = boot(); own(b); fund(b, 10000); b.m.join(planId);
+    assert.equal(b.m.achievements[position].id, achievementId);
+    assert.equal(b.m.achievements[position].target, rate * 500);
+    for (let i = 0; i < 499; i++) cycle(b);
+    assert.equal(b.m.state().earnedByPlan[planId], rate * 499);
+    assert.equal(b.m.state().unlocked.includes(achievementId), false);
+    const result = cycle(b);
+    assert.ok(result.peel.newly.some(a => a.id === achievementId));
+    assert.equal(b.m.valueFor(b.m.achievements[position], b.m.state()), rate * 500);
+    assert.equal(cycle(b).peel.newly.length, 0);
+    assert.equal(boot({ map: b.map }).m.state().earnedByPlan[planId], rate * 501);
+  }
+});
+
+test('only the rank at peeling receives income; guest work, rank changes and fund resets keep separate totals', () => {
+  const b = boot(); own(b); fund(b, 20000);
+  b.m.join('ordinary'); cycle(b);
+  b.m.workStep('seal'); b.m.join('gold'); b.advance(); b.m.workStep('peel'); b.advance();
+  b.m.join('black'); cycle(b); b.m.leave(); cycle(b);
+  assert.equal(b.m.state().earnedByPlan.ordinary, 20);
+  assert.equal(b.m.state().earnedByPlan.gold, 50);
+  assert.equal(b.m.state().earnedByPlan.black, 100);
+  assert.equal(b.m.state().earnedTotal, 180);
+  b.m.resetBalance(); assert.equal(b.m.state().earnedByPlan.black, 100);
+  b.m.clear(); assert.equal(b.m.state().earnedByPlan.black, 0);
+});
+
+test('v5 migration retires old honors without inventing rank income or changing money and membership', () => {
+  const b = boot(); own(b); const s = b.m.state();
+  s.version = 5; delete s.earnedByPlan;
+  s.balance = 4321; s.earnedTotal = 200000;
+  s.membership = { planId: 'gold', since: s.lastUsed }; s.membershipCredit = 5000;
+  s.unlocked = ['first', 'planned', 'return', 'master', 'worker'];
+  const migrated = boot({ map: new Map([[KEY, JSON.stringify(s)]]) }).m;
+  assert.equal(migrated.corrupt, false); assert.equal(migrated.state().version, 6);
+  assert.equal(migrated.state().balance, 4321); assert.equal(migrated.state().totalSpent, 7000);
+  assert.equal(migrated.state().earnedTotal, 200000); assert.equal(migrated.workRate(), 50);
+  assert.equal(Object.values(migrated.state().earnedByPlan).reduce((a, v) => a + v, 0), 0);
+  for (const id of ['return', 'master', 'worker', 'red-worker', 'gold-worker', 'black-worker']) assert.equal(migrated.state().unlocked.includes(id), false);
+  assert.equal(migrated.state().unlocked.includes('first'), true);
+});
+
+test('invalid member-income ledgers are protected instead of silently reset', () => {
+  for (const change of [s => { delete s.earnedByPlan; }, s => { s.earnedByPlan.gold = -50; }, s => { s.earnedByPlan.black = 100; }]) {
+    const s = boot().m.state(); change(s);
+    const raw = JSON.stringify(s), map = new Map([[KEY, raw]]), { m } = boot({ map });
+    assert.equal(m.corrupt, true); assert.equal(map.get(KEY), raw);
+  }
 });
