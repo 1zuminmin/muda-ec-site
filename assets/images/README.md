@@ -25,3 +25,7 @@ Use case: product-mockup. Asset type: luxury Japanese satirical shop hero and pr
 ### 表題・名前欄の改訂
 
 現行画像は `right-deed-blank-photo.png` です。内蔵ImageGenで `right-deed-photo.png` を編集し、表題を漢字のみの「不作為権利書」に変更、権利者の名前欄を空白にしました。編集プロンプトは `right-deed-blank-prompt.json`。商品名「何もしない権利」は維持しています。
+
+### アクリル写真立てへの変更（2026年11月6日）
+
+現行画像は `right-acrylic-photo.png` です。内蔵ImageGenで、既存の不作為権利書を透明なアクリルの卓上写真立てに収めた商品写真へ編集しました。四隅の金具・透明な縁・背面の脚で立体感を出し、権利者の名前欄は空白を維持しています。ユーザー提供の写真立て画像は構造の参考のみとし、元画像はリポジトリに含めていません。編集プロンプトは `right-acrylic-prompt.json`。旧版も保存しています。
