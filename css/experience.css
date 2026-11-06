@@ -91,6 +91,22 @@
 .collection-progress-detail label > span { color: var(--muted); font-size: 10px; }
 .collection-progress-detail .text-link { margin-top: 16px; }
 .achievements-section #collection-status { margin-top: 40px; }
+.achievement-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.achievement-card { display: flex; flex-direction: column; min-width: 0; min-height: 330px; }
+.achievement-card h3 { line-height: 1.6; }
+.achievement-card > p:not(.eyebrow) { line-height: 2; }
+.achievement-top { gap: 16px; }
+.achievement-top .medallion { flex-shrink: 0; }
+.achievement-status { white-space: nowrap; }
+.achievement-progress { margin-top: auto; padding-top: 28px; }
+.achievement-progress .progress-label { margin-top: 0; flex-wrap: wrap; row-gap: 5px; }
+.achievement-progress .progress-label > span:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.achievement-sealed { margin-top: auto; padding-top: 28px; padding-bottom: 10px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+.achievement-secret { border-style: dashed; }
+@media (max-width: 760px) {
+  .achievement-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  .achievement-card { min-height: 300px; }
+}
 .completion-board { padding: 45px 30px; border: 1px solid var(--gold); background: #192733; text-align: center; margin-bottom: 40px; }
 .completion-mark { color: var(--gold); font: 44px Georgia, serif; margin: 15px 0; }
 .completion-board h2 { font-size: 30px; }

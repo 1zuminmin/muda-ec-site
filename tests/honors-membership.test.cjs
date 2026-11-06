@@ -24,6 +24,13 @@ test('honors start out of eight, expand at eight and retain the secret card in t
   let cards = b.node('achievements-list').innerHTML.split('<article').slice(1);
   assert.equal(cards.length, 9);
   assert.match(cards[4], /まだ見ぬ無駄/);
+  assert.match(cards[0], /初めての後悔/);
+  assert.match(cards[1], /計画的な浪費/);
+  assert.match(cards[2], /完全なる虚無/);
+  assert.match(cards[6], /正会員の徒労/);
+  assert.match(cards[7], /特別会員の徒労/);
+  assert.match(cards[8], /名誉会員の徒労/);
+  assert.match(cards[6], /HONOR N° 003/);
   const s = b.m.state();
   s.history = b.m.products.map((p, i) => ({ id: `TEST-${i}`, productId: p.id, price: p.price, date: s.lastUsed }));
   s.totalSpent = 171000; s.earnedTotal = 100;
