@@ -23,7 +23,7 @@ for (const page of pages) {
       assert.ok(fs.existsSync(path.join(root, ref.split(/[?#]/)[0])), `missing ${ref}`);
     }
     const scripts = [...html.matchAll(/<script defer src="([^"]+)"/g)].map(m => m[1]);
-    assert.equal(scripts[0], 'js/storage.js'); assert.equal(scripts[1], 'js/main.js');
+    assert.equal(scripts[0], 'js/storage.js'); assert.equal(scripts[1], 'js/config.js'); assert.equal(scripts[2], 'js/main.js');
     if (scripts.includes('js/shop.js')) { assert.ok(scripts.indexOf('js/certificate.js') < scripts.indexOf('js/shop.js')); assert.ok(ids.includes('purchase-dialog')); }
   });
 }
