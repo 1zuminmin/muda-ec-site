@@ -59,6 +59,8 @@ test('collection and honor denominators expand independently and repeated purcha
 test('membership UI shows dues, disables insufficient confirmation and quotes upgrade differences', () => {
   const b = boot(); b.m.badgeHTML = () => ''; b.m.toast = () => {};
   vm.runInContext(read('js/membership.js'), b.context);
+  const buttonClass = id => b.node('plans').innerHTML.match(new RegExp(`<button class="([^"]+)" data-join="${id}"`))[1];
+  for (const id of ['ordinary', 'gold', 'black']) assert.match(buttonClass(id), /membership-locked/);
   assert.match(b.node('plans').innerHTML, /¥2,000/);
   assert.match(b.node('plans').innerHTML, /¥5,000/);
   assert.match(b.node('plans').innerHTML, /¥10,000/);
@@ -66,16 +68,23 @@ test('membership UI shows dues, disables insufficient confirmation and quotes up
   click('ordinary');
   assert.match(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
   assert.match(b.node('member-dialog-content').innerHTML, /資金不足/);
+  assert.match(b.node('member-dialog-content').innerHTML, /class="button membership-locked full" id="confirm-membership"/);
   const s = b.m.state(); s.balance = 12000; b.map.set('muda-shokai:v1', JSON.stringify(s));
   click('black');
   assert.match(b.node('member-dialog-content').innerHTML, /あと3種類の購入が必要/);
   assert.match(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
   assert.match(b.node('member-dialog-content').innerHTML, /href="shop.html"/);
-  b.m.buy('stone'); b.m.join('ordinary'); click('gold');
+  b.m.buy('stone');
+  assert.match(buttonClass('ordinary'), /\bgold\b/);
+  assert.match(buttonClass('gold'), /membership-locked/);
+  b.m.join('ordinary'); click('gold');
+  assert.match(buttonClass('ordinary'), /membership-locked/);
   assert.match(b.node('member-dialog-content').innerHTML, /あと1種類の購入が必要/);
   assert.match(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
   b.m.buy('dot'); click('gold');
+  assert.match(buttonClass('gold'), /\bgold\b/);
   assert.doesNotMatch(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
+  assert.match(b.node('member-dialog-content').innerHTML, /class="button gold full" id="confirm-membership"/);
   assert.match(b.node('member-dialog-content').innerHTML, /今回の架空会費：¥3,000/);
   b.node('confirm-membership').onclick();
   assert.equal(b.m.state().balance, 5000);
