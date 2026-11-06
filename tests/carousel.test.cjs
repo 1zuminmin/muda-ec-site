@@ -48,13 +48,13 @@ test('carousel renders nine normal products, excludes the secret and wraps with 
   b.get('hero-next').fire('click'); assert.equal(track.style.transform, 'translateX(-0%)');
   assert.equal(b.get('hero-product-name').textContent, 'ただの石ころの画像');
 });
-test('autoplay advances every six seconds without live announcements and can stay paused', () => {
+test('autoplay advances every six seconds without a pause button or live announcements', () => {
   const b = boot(); b.tick();
   assert.equal(b.get('hero-position').textContent, '02 / 09');
   assert.equal(b.get('hero-announcement').textContent, undefined);
-  b.get('hero-autoplay').fire('click'); assert.equal(b.timers.size, 0);
-  b.get('hero-next').fire('click'); assert.equal(b.timers.size, 0);
-  b.get('hero-autoplay').fire('click'); assert.equal(b.timers.size, 1);
+  assert.equal(b.nodes.has('hero-autoplay'), false);
+  b.get('hero-next').fire('click'); assert.equal(b.timers.size, 1);
+  b.tick(); assert.equal(b.get('hero-position').textContent, '04 / 09');
 });
 test('hover, focus and hidden documents pause the timer and resume with a full interval', () => {
   const b = boot(), root = b.get('hero-carousel');
@@ -65,13 +65,12 @@ test('hover, focus and hidden documents pause the timer and resume with a full i
   b.document.hidden = true; b.document.fire('visibilitychange'); assert.equal(b.timers.size, 0);
   b.document.hidden = false; b.document.fire('visibilitychange'); assert.equal(b.timers.size, 1);
 });
-test('reduced motion disables autoplay but permits manual navigation and an explicit restart', () => {
+test('reduced motion disables autoplay, permits manual navigation and reacts to OS setting changes', () => {
   const b = boot(true); assert.equal(b.timers.size, 0);
-  assert.equal(b.get('hero-autoplay').attributes['aria-pressed'], 'false');
   b.get('hero-stage').fire('keydown', { key: 'ArrowRight' });
   assert.equal(b.get('hero-position').textContent, '02 / 09'); assert.equal(b.timers.size, 0);
-  b.get('hero-autoplay').fire('click'); assert.equal(b.timers.size, 1);
-  b.media.fire('change'); assert.equal(b.timers.size, 0);
+  b.media.matches = false; b.media.fire('change'); assert.equal(b.timers.size, 1);
+  b.media.matches = true; b.media.fire('change'); assert.equal(b.timers.size, 0);
 });
 test('swipes navigate and suppress link activation, while taps, vertical motion and cancellation do not', () => {
   const b = boot(), stage = b.get('hero-stage');

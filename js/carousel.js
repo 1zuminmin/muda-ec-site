@@ -6,9 +6,9 @@
   const M = window.Muda, products = M.regularProducts;
   if (products.length < 2) return;
   const get = id => document.getElementById(id);
-  const stage = get('hero-stage'), track = get('hero-track'), toggle = get('hero-autoplay');
+  const stage = get('hero-stage'), track = get('hero-track');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
-  let index = 0, timer = null, enabled = !motion.matches;
+  let index = 0, timer = null;
   let hovered = false, focused = false, onscreen = true, gesture = null, suppressClick = false;
   const pad = n => String(n).padStart(2, '0');
   track.innerHTML = products.map((p, i) => `<a class="hero-slide" href="product.html?id=${p.id}" aria-label="${p.name}の詳細"><img src="assets/images/${p.image}" alt="${p.name}" loading="${i ? 'lazy' : 'eager'}" ${i ? '' : 'fetchpriority="high"'} draggable="false"></a>`).join('');
@@ -16,7 +16,7 @@
   function schedule() {
     if (timer !== null) clearTimeout(timer);
     timer = null;
-    if (enabled && !hovered && !focused && onscreen && !document.hidden && !gesture) {
+    if (!motion.matches && !hovered && !focused && onscreen && !document.hidden && !gesture) {
       timer = setTimeout(() => { timer = null; show(index + 1, false); }, 6000);
     }
   }
@@ -43,14 +43,8 @@
     if (announce) get('hero-announcement').textContent = `${index + 1} / ${products.length}、${p.name}、${M.money(p.price)}、架空の価格`;
     schedule();
   }
-  function renderToggle() {
-    toggle.textContent = enabled ? '自動切替を停止' : '自動切替を再開';
-    toggle.setAttribute('aria-pressed', String(enabled));
-    schedule();
-  }
   get('hero-prev').addEventListener('click', () => show(index - 1));
   get('hero-next').addEventListener('click', () => show(index + 1));
-  toggle.addEventListener('click', () => { enabled = !enabled; renderToggle(); });
   root.addEventListener('mouseenter', () => { hovered = true; schedule(); });
   root.addEventListener('mouseleave', () => { hovered = false; schedule(); });
   root.addEventListener('focusin', () => { focused = true; schedule(); });
@@ -94,7 +88,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) gesture = null; schedule(); });
   window.addEventListener('pagehide', () => { onscreen = false; cancelGesture(); });
   window.addEventListener('pageshow', () => { onscreen = true; schedule(); });
-  motion.addEventListener('change', () => { enabled = !motion.matches; renderToggle(); });
+  motion.addEventListener('change', schedule);
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => {
       onscreen = entries.some(entry => entry.isIntersecting); schedule();
@@ -102,5 +96,5 @@
     observer.observe(root);
   }
   get('hero-controls').hidden = false;
-  renderToggle(); show(0, false);
+  show(0, false);
 })();
