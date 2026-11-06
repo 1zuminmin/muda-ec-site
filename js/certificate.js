@@ -4,6 +4,7 @@
   M.purchaseDate = date;
   M.shareURL = purchase => {
     const p = M.products.find(p => p.id === purchase.productId);
+    if (p.secret && M.state().completion && M.summaryShareURL) return M.summaryShareURL();
     const text = `伊見内商会で「${p.name}」に${M.money(purchase.price)}を無駄遣いしました。\nここまでの累計 ${M.money(M.state().totalSpent)}。\n${p.message}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`;
     return M.xShareURL(text);
   };

@@ -28,6 +28,7 @@ function render(override, complete = false) {
     map.set('muda-shokai:v1', JSON.stringify(s));
   }
   vm.runInContext(read('js/main.js'), context);
+  vm.runInContext(read('js/certificate.js'), context);
   return { M, node, creator, unset, policy, pending };
 }
 
@@ -54,4 +55,24 @@ test('unset or invalid author names create no external link; policy alternatives
   const r = render({ creatorX: '@izuko_1231', streamingPolicy: 'noncommercial' });
   assert.equal(r.M.creatorURL, 'https://x.com/izuko_1231');
   assert.match(r.policy.textContent, /収益を得ない利用に限り/);
+});
+
+test('only completion shares mention the configured author and disclose the opt-out before sharing', () => {
+  const text = link => new URL(link).searchParams.get('text');
+  const playing = render();
+  assert.doesNotMatch(text(playing.M.summaryShareURL()), /@izuko_1231/);
+  const completed = render(null, true);
+  const share = new URL(completed.M.summaryShareURL());
+  assert.match(share.searchParams.get('text'), /@izuko_1231/);
+  assert.equal(share.searchParams.get('url'), 'https://1zuminmin.github.io/muda-ec-site/');
+  assert.match(completed.node('collection-status').innerHTML, /掲載不要/);
+  assert.match(completed.node('collection-status').innerHTML, /原則として/);
+  assert.match(text(completed.M.shareURL({ productId: 'final-envelope', price: 100000 })), /@izuko_1231/);
+  assert.doesNotMatch(text(completed.M.shareURL({ productId: 'stone', price: 500 })), /@izuko_1231/);
+  completed.M.setName('公開しないニックネーム');
+  assert.doesNotMatch(text(completed.M.summaryShareURL()), /公開しないニックネーム/);
+  const changed = render({ creatorX: 'another_author', streamingPolicy: 'monetized' }, true);
+  assert.match(text(changed.M.summaryShareURL()), /@another_author/);
+  const unset = render({ creatorX: '', streamingPolicy: 'monetized' }, true);
+  assert.doesNotMatch(text(unset.M.summaryShareURL()), /@izuko_1231|@undefined/);
 });
