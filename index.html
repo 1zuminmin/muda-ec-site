@@ -14,6 +14,7 @@
 <script defer src="js/config.js"></script>
 <script defer src="js/main.js">
 </script>
+<script defer src="js/carousel.js"></script>
 </head>
 <body data-page="home">
 <a class="skip" href="#main">本文へ移動</a>
@@ -31,15 +32,23 @@
 <a class="hero-secondary" href="earn.html">先に資金をつくる ↗</a>
 <p class="fine">完全無料のシミュレーション。実際の支払いはありません。</p>
 </div>
-<div class="hero-art" aria-label="台座に展示された、ただの石ころ">
-<div class="art-coordinate">COLLECTION No. 001 / STONE</div>
-<img src="assets/images/stone-lit.png" alt="美術品のように展示された灰色の石ころ">
-<div class="exhibit-caption">
-<span>ただの石ころの画像</span>
-<span>¥500 <small>架空</small>
-</span>
+<div class="hero-art" id="hero-carousel" role="region" aria-roledescription="カルーセル" aria-label="商品展示">
+<div class="art-coordinate" id="hero-coordinate">COLLECTION No. 001 / STONE</div>
+<div class="hero-stage" id="hero-stage" tabindex="0" aria-label="左右の矢印キーやスワイプで商品を切り替え">
+<div class="hero-track" id="hero-track">
+<a class="hero-slide" href="product.html?id=stone"><img src="assets/images/stone-lit.png" alt="美術品のように展示された灰色の石ころ" fetchpriority="high"></a>
 </div>
-<p class="art-note">何の変哲もない。それこそが、真価。</p>
+</div>
+<div class="exhibit-caption">
+<a id="hero-product-name" href="product.html?id=stone">ただの石ころの画像</a>
+<span><span id="hero-price">¥500</span> <small>架空</small></span>
+</div>
+<p class="art-note" id="hero-note">何の変哲もない。それこそが、真価。</p>
+<div class="hero-controls" id="hero-controls" hidden>
+<div class="hero-paging"><button type="button" class="hero-control" id="hero-prev" aria-label="前の商品" aria-controls="hero-track">←</button><span class="hero-position" id="hero-position">01 / 09</span><button type="button" class="hero-control" id="hero-next" aria-label="次の商品" aria-controls="hero-track">→</button></div>
+<button type="button" class="hero-autoplay" id="hero-autoplay" aria-pressed="true">自動切替を停止</button>
+</div>
+<p class="sr-only" id="hero-announcement" aria-live="polite" aria-atomic="true"></p>
 </div>
 <a class="scroll-cue" href="#philosophy">SCROLL TO DISCOVER <span>↓</span>
 </a>
