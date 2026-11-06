@@ -45,23 +45,28 @@ test('honors start out of eight, expand at eight and retain the secret card in t
   assert.match(cards[4], /真の無駄使いyer/);
   assert.match(cards[4], /解除済み/);
 });
-test('collection and honor denominators expand independently and repeated purchases do not advance the target', () => {
+test('collection starts out of nine and both denominators expand only at the joint unlock', () => {
   const b = boot(), s = b.m.state();
   const purchase = (p, i) => ({ id: `TEST-${i}`, productId: p.id, price: p.price, date: s.lastUsed });
-  for (const [count, total] of [[0, 8], [1, 8], [7, 8], [8, 9], [9, 10], [10, 10]]) {
+  for (const [count, total] of [[0, 9], [1, 9], [7, 9], [8, 9], [9, 9], [10, 10]]) {
     s.history = b.m.products.slice(0, count).map(purchase);
     assert.equal(b.m.collectionProgress(s).count, count);
     assert.equal(b.m.collectionProgress(s).total, total);
   }
   s.history = Array.from({ length: 8 }, (_, i) => purchase(b.m.products[0], i));
   assert.equal(b.m.collectionProgress(s).count, 1);
-  assert.equal(b.m.collectionProgress(s).total, 8);
+  assert.equal(b.m.collectionProgress(s).total, 9);
   s.unlocked = b.m.regularAchievements.slice(0, 7).map(a => a.id);
   assert.equal(b.m.honorProgress(s).total, 8);
   s.unlocked = b.m.regularAchievements.map(a => a.id);
   assert.equal(b.m.honorProgress(s).count, 8);
+  assert.equal(b.m.honorProgress(s).total, 8);
+  assert.equal(b.m.collectionProgress(s).total, 9);
+  s.history = b.m.regularProducts.map(purchase); s.totalSpent = 71000;
+  s.earnedByPlan = { ordinary: 10000, gold: 25000, black: 50000 }; s.earnedTotal = 85000;
+  assert.equal(b.m.specialUnlocked(s), true);
   assert.equal(b.m.honorProgress(s).total, 9);
-  assert.equal(b.m.collectionProgress(s).total, 8);
+  assert.equal(b.m.collectionProgress(s).total, 10);
 });
 test('membership UI shows dues, disables insufficient confirmation and quotes upgrade differences', () => {
   const b = boot(); b.m.badgeHTML = () => ''; b.m.toast = () => {};

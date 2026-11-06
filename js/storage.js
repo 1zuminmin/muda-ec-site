@@ -47,9 +47,10 @@
   }
   const owned = s => new Set(s.history.map(p => p.productId));
   const regularCount = s => regularProducts.filter(p => owned(s).has(p.id)).length;
-  const specialUnlocked = s => regularCount(s) === regularProducts.length;
+  const allRegularPurchased = s => regularCount(s) === regularProducts.length;
+  const specialUnlocked = s => isComplete(s) || (allRegularPurchased(s) && achievements.filter(a => a.id !== 'complete').every(a => valueFor(a, s) >= a.target));
   const isComplete = s => products.every(p => owned(s).has(p.id));
-  const valueFor = (a, s) => a.type === 'count' ? s.history.length : a.type === 'unique' ? owned(s).size : a.type === 'regular' ? regularCount(s) : a.type === 'member-earned' ? s.earnedByPlan[a.planId] : a.type === 'earned' ? s.earnedTotal : s.totalSpent;
+  const valueFor = (a, s) => a.type === 'count' ? s.history.length : a.type === 'unique' ? owned(s).size : a.type === 'regular' ? regularCount(s) : a.type === 'member-earned' ? (s.earnedByPlan?.[a.planId] || 0) : a.type === 'earned' ? s.earnedTotal : s.totalSpent;
   const workRate = s => plans.find(p => p.id === s.membership?.planId)?.rate ?? 10;
   let fallback = initial(), available = true, corrupt = false;
   const integer = n => Number.isSafeInteger(n) && n >= 0;
@@ -68,7 +69,7 @@
     if (!integer(s.workCount) || !integer(s.workLastAt) || !integer(s.earnedTotal) || !(s.membership === null || (plans.some(p => p.id === s.membership.planId) && dateValid(s.membership.since)))) return false;
     if (s.version === 2) return s.earnedTotal === s.workCount * 10 && Array.isArray(s.rounds) && (s.pendingRound === null || oldRoundValid(s.pendingRound)) && (s.completion === null || snapshotValid(s.completion));
     if (s.version >= 6 && (!s.earnedByPlan || !plans.every(p => integer(s.earnedByPlan[p.id])) || !integer(plans.reduce((sum, p) => sum + s.earnedByPlan[p.id], 0)) || plans.reduce((sum, p) => sum + s.earnedByPlan[p.id], 0) > s.earnedTotal)) return false;
-    return (s.version < 5 || (integer(s.membershipCredit) && [0, ...plans.map(p => p.fee)].includes(s.membershipCredit) && integer(s.membershipSpent) && (!s.membership || s.membershipCredit >= plans.find(p => p.id === s.membership.planId).fee))) && (s.version === 3 || profileValid(s.profile)) && ['seal', 'peel'].includes(s.workPhase) && (s.standardCompletion === null || (snapshotValid(s.standardCompletion) && specialUnlocked(s))) && (s.completion === null || (snapshotValid(s.completion) && isComplete(s))) && (!owned(s).has('final-envelope') || specialUnlocked(s));
+    return (s.version < 5 || (integer(s.membershipCredit) && [0, ...plans.map(p => p.fee)].includes(s.membershipCredit) && integer(s.membershipSpent) && (!s.membership || s.membershipCredit >= plans.find(p => p.id === s.membership.planId).fee))) && (s.version === 3 || profileValid(s.profile)) && ['seal', 'peel'].includes(s.workPhase) && (s.standardCompletion === null || (snapshotValid(s.standardCompletion) && allRegularPurchased(s))) && (s.completion === null || (snapshotValid(s.completion) && isComplete(s))) && (!owned(s).has('final-envelope') || allRegularPurchased(s));
   }
   function migrateLegacy(s) {
     if (s.version === 5) return s;
@@ -82,7 +83,7 @@
     if (s.version === 2 && s.pendingRound?.won) next.balance += s.pendingRound.stake * 2;
     next.membershipCredit = credit;
     if (!integer(next.balance)) throw new Error('Invalid migrated balance');
-    if (specialUnlocked(next)) next.standardCompletion = s.completion || { date: s.lastUsed, totalSpent: s.totalSpent, count: s.history.length };
+    if (allRegularPurchased(next)) next.standardCompletion = s.completion || { date: s.lastUsed, totalSpent: s.totalSpent, count: s.history.length };
     return next;
   }
   function migrate(s) {
@@ -140,11 +141,11 @@
     regularHonorCount: (s = state()) => achievements.filter(a => a.id !== 'complete' && s.unlocked.includes(a.id)).length, valueFor, nameLength,
     honorProgress(s = state()) {
       const regular = achievements.filter(a => a.id !== 'complete' && s.unlocked.includes(a.id)).length;
-      return { count: regular + (s.unlocked.includes('complete') ? 1 : 0), total: regular >= 8 || s.unlocked.includes('complete') ? 9 : 8 };
+      return { count: regular + (s.unlocked.includes('complete') ? 1 : 0), total: specialUnlocked(s) ? 9 : 8 };
     },
     collectionProgress(s = state()) {
       const count = owned(s).size;
-      return { count, total: count < 8 ? 8 : count < 9 ? 9 : products.length };
+      return { count, total: specialUnlocked(s) ? products.length : regularProducts.length };
     },
     recipientName: (s = state()) => s.profile.name || '名もなき浪費家',
     memberPlan: (s = state()) => plans.find(p => p.id === s.membership?.planId) || null,
@@ -167,7 +168,7 @@
       const purchase = { id: id(), productId, price: product.price, date: new Date().toISOString() };
       s.balance -= product.price; s.totalSpent += product.price; s.history.push(purchase);
       const invitationNow = !wasInvited && specialUnlocked(s);
-      if (invitationNow) s.standardCompletion = { date: purchase.date, totalSpent: s.totalSpent, count: s.history.length };
+      if (!s.standardCompletion && allRegularPurchased(s)) s.standardCompletion = { date: purchase.date, totalSpent: s.totalSpent, count: s.history.length };
       const completedNow = !s.completion && isComplete(s);
       if (completedNow) s.completion = { date: purchase.date, totalSpent: s.totalSpent, count: s.history.length };
       const newly = unlock(s); save(s);
@@ -175,6 +176,7 @@
     },
     workStep(action) {
       const s = state(), now = Date.now();
+      const wasInvited = specialUnlocked(s);
       if (!['seal', 'peel'].includes(action) || action !== s.workPhase) throw new Error('いまの作業手順をご確認ください。');
       if (now - s.workLastAt < 180) return null;
       let amount = 0;
@@ -191,7 +193,7 @@
       }
       s.workLastAt = now;
       const newly = unlock(s); save(s);
-      return { amount, phase: s.workPhase, newly };
+      return { amount, phase: s.workPhase, newly, invitationNow: !wasInvited && specialUnlocked(s) };
     },
     join(planId, expectedCost) {
       const s = state(), quote = joinQuote(planId, s), plan = plans.find(p => p.id === planId);

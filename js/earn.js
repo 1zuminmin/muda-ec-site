@@ -28,6 +28,7 @@
       sound?.finish(phase);
       document.getElementById('work-result').textContent = r.amount ? `元どおりになりました。何も進んでいません。 + ${M.money(r.amount)}（架空）` : 'しっかり閉じました。次は、上へ引き上げて糊を剥がしてください。';
       M.notifyAchievements(r.newly);
+      if (r.invitationNow) M.toast('お得意様への特別なご案内です。', '通常8実績と通常9品が揃いました。商品一覧で最後の一品をご覧ください。');
     } catch (e) { M.toast('作業手順をご確認ください。', e.message); render(); }
   }
   function progressFor(g, x, y) {

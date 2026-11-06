@@ -38,7 +38,7 @@ test('new purchases debit new prices; old history and certificates retain origin
 test('existing members inherit credit without retroactive charges and upgrade by difference',()=>{const s=legacy(2);s.membership={planId:'gold',since:s.lastUsed};const b=boot({map:new Map([[KEY,JSON.stringify(s)]])});assert.equal(b.m.state().balance,8600);assert.equal(b.m.state().membershipCredit,5000);assert.equal(b.m.state().membershipSpent,0);b.m.join('black');assert.equal(b.m.state().balance,3600);assert.equal(b.m.state().membershipSpent,5000);});
 test('v2 pending win retires and settles only once',()=>{const s=legacy(2);s.pendingRound={stake:500,die1:1,die2:1,choice:'cho',won:true};const b=boot({map:new Map([[KEY,JSON.stringify(s)]])});assert.equal(b.m.state().balance,9600);assert.equal(b.m.state().rounds,undefined);assert.equal(boot({map:b.map}).m.state().balance,9600);});
 test('hidden item is inaccessible before all nine distinct purchases',()=>{const b=boot();fund(b,300000);assert.throws(()=>b.m.buy('final-envelope'),/ご案内/);for(let i=0;i<9;i++)b.m.buy('stone');assert.equal(b.m.regularCount(),1);assert.equal(b.m.canView('final-envelope'),false);});
-test('ninth distinct item invites; final 100000 purchase completes once and persists',()=>{const b=boot();const last=collectRegular(b);assert.equal(last.invitationNow,true);assert.equal(last.completedNow,false);assert.equal(b.m.state().standardCompletion.totalSpent,71000);b.m.resetBalance();assert.throws(()=>b.m.buy('final-envelope'),/不足/);fund(b,200000);const r=b.m.buy('final-envelope');assert.equal(r.purchase.price,100000);assert.equal(r.completedNow,true);assert.equal(b.m.state().completion.totalSpent,171000);const snapshot=JSON.stringify(b.m.state().completion);assert.equal(b.m.buy('final-envelope').completedNow,false);assert.equal(JSON.stringify(boot({map:b.map}).m.state().completion),snapshot);assert.equal(b.m.regularHonorCount(),5);});
+test('nine products plus all normal honors unlock the final purchase and preserve completion',()=>{const b=boot();const last=collectRegular(b);assert.equal(last.invitationNow,false);assert.equal(last.completedNow,false);assert.equal(b.m.state().standardCompletion.totalSpent,71000);b.m.resetBalance();assert.throws(()=>b.m.buy('final-envelope'),/ご案内/);memberIncome(b);assert.throws(()=>b.m.buy('final-envelope'),/不足/);fund(b,200000);const r=b.m.buy('final-envelope');assert.equal(r.purchase.price,100000);assert.equal(r.completedNow,true);assert.equal(b.m.state().completion.totalSpent,171000);const snapshot=JSON.stringify(b.m.state().completion);assert.equal(b.m.buy('final-envelope').completedNow,false);assert.equal(JSON.stringify(boot({map:b.map}).m.state().completion),snapshot);assert.equal(b.m.regularHonorCount(),8);});
 test('fund reset retains dues credit, history and name; full reset clears all',()=>{const b=boot();own(b);fund(b,15000);b.m.join('black');b.m.buy('stone');b.m.setName('太郎');b.m.resetBalance();assert.equal(b.m.state().totalSpent,7500);assert.equal(b.m.state().membershipCredit,10000);assert.equal(b.m.recipientName(),'太郎');b.m.clear();assert.equal(b.m.state().membershipCredit,0);assert.equal(b.m.state().history.length,0);assert.equal(b.m.state().balance,0);});
 test('blocked storage supports temporary work; corrupt data remains untouched',()=>{const b=boot({blocked:true});earn(b,500);b.m.buy('stone');assert.equal(b.m.state().balance,0);assert.equal(b.m.persistent,false);const map=new Map([[KEY,'{broken']]);const c=boot({map});cycle(c);assert.equal(map.get(KEY),'{broken');assert.equal(c.m.corrupt,true);c.m.clear();assert.equal(c.m.state().balance,0);});
 
@@ -62,7 +62,7 @@ test('old nine-product completion remains a milestone at its original price', ()
   const { m } = boot({ map: new Map([[KEY, JSON.stringify(s)]]) });
   assert.equal(m.corrupt, false);
   assert.equal(m.state().standardCompletion.totalSpent, 14200);
-  assert.equal(m.specialUnlocked(), true);
+  assert.equal(m.specialUnlocked(), false);
   assert.equal(m.state().completion, null);
   assert.equal(m.state().unlocked.includes('complete'), false);
 });
@@ -176,4 +176,49 @@ test('invalid member-income ledgers are protected instead of silently reset', ()
     const raw = JSON.stringify(s), map = new Map([[KEY, raw]]), { m } = boot({ map });
     assert.equal(m.corrupt, true); assert.equal(map.get(KEY), raw);
   }
+});
+
+function memberIncome(b, black = 50000) {
+  const s = b.m.state();
+  s.earnedByPlan = { ordinary: 10000, gold: 25000, black };
+  s.earnedTotal = 35000 + black; s.workCount = 1000 + black / 100;
+  b.map.set(KEY, JSON.stringify(s));
+  // Reload to apply earned honors just as opening a page does.
+  boot({ map: b.map });
+}
+
+test('last paid-member work unlocks both secrets together and notifies exactly once', () => {
+  const b = boot(); collectRegular(b); memberIncome(b, 49900); b.m.join('black');
+  assert.equal(b.m.specialUnlocked(), false); assert.equal(b.m.canView('final-envelope'), false);
+  assert.equal(b.m.visibleProducts().length, 9); assert.equal(b.m.honorProgress().total, 8);
+  assert.equal(cycle(b).peel.invitationNow, true);
+  assert.equal(b.m.specialUnlocked(), true); assert.equal(b.m.canView('final-envelope'), true);
+  assert.equal(b.m.visibleProducts().length, 10); assert.equal(b.m.honorProgress().total, 9);
+  assert.equal(b.m.collectionProgress().total, 10); assert.equal(b.m.regularHonorCount(), 8);
+  assert.equal(cycle(b).peel.invitationNow, false);
+  assert.equal(boot({ map: b.map }).m.specialUnlocked(), true);
+});
+
+test('finishing all work honors before the ninth purchase keeps both secrets locked until buying it', () => {
+  const b = boot(); own(b, 8); memberIncome(b); fund(b, 200000);
+  assert.equal(b.m.honorProgress().total, 8); assert.equal(b.m.collectionProgress().total, 9);
+  assert.equal(b.m.specialUnlocked(), false); assert.throws(() => b.m.buy('final-envelope'), /ご案内/);
+  const last = b.m.buy(b.m.regularProducts[8].id);
+  assert.equal(last.invitationNow, true); assert.equal(last.completedNow, false);
+  assert.equal(b.m.honorProgress().total, 9); assert.equal(b.m.collectionProgress().total, 10);
+  assert.equal(b.m.state().standardCompletion.totalSpent, 71000);
+});
+
+test('saved nine-product milestone remains valid while locked, and old full completion is preserved', () => {
+  const b = boot(); collectRegular(b);
+  const next = boot({ map: b.map }).m;
+  assert.equal(next.corrupt, false); assert.equal(next.state().history.length, 9);
+  assert.equal(next.state().standardCompletion.totalSpent, 71000); assert.equal(next.specialUnlocked(), false);
+  const s = next.state();
+  s.history.push({ id: 'OLD-FINAL', productId: 'final-envelope', price: 20000, date: s.lastUsed });
+  s.totalSpent += 20000; s.completion = { date: s.lastUsed, totalSpent: s.totalSpent, count: 10 };
+  const old = boot({ map: new Map([[KEY, JSON.stringify(s)]]) }).m;
+  assert.equal(old.corrupt, false); assert.equal(old.specialUnlocked(), true);
+  assert.equal(old.honorProgress().total, 9); assert.equal(old.collectionProgress().total, 10);
+  assert.equal(old.state().completion.totalSpent, 91000);
 });
