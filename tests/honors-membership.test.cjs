@@ -66,8 +66,16 @@ test('membership UI shows dues, disables insufficient confirmation and quotes up
   click('ordinary');
   assert.match(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
   assert.match(b.node('member-dialog-content').innerHTML, /資金不足/);
-  const s = b.m.state(); s.balance = 10000; b.map.set('muda-shokai:v1', JSON.stringify(s));
-  b.m.join('ordinary'); click('gold');
+  const s = b.m.state(); s.balance = 12000; b.map.set('muda-shokai:v1', JSON.stringify(s));
+  click('black');
+  assert.match(b.node('member-dialog-content').innerHTML, /あと3種類の購入が必要/);
+  assert.match(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
+  assert.match(b.node('member-dialog-content').innerHTML, /href="shop.html"/);
+  b.m.buy('stone'); b.m.join('ordinary'); click('gold');
+  assert.match(b.node('member-dialog-content').innerHTML, /あと1種類の購入が必要/);
+  assert.match(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
+  b.m.buy('dot'); click('gold');
+  assert.doesNotMatch(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
   assert.match(b.node('member-dialog-content').innerHTML, /今回の架空会費：¥3,000/);
   b.node('confirm-membership').onclick();
   assert.equal(b.m.state().balance, 5000);

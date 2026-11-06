@@ -27,9 +27,9 @@
     { id: 'complete', name: '真の無駄使いyer', description: '特別なご案内を含む全10種類を購入する', target: products.length, type: 'unique', symbol: 'Ⅸ' }
   ]);
   const plans = Object.freeze([
-    { id: 'ordinary', name: '正会員', english: 'RED', tagline: 'まずは、品のある無駄から。', rate: 20, fee: 2000, rank: 'Ⅰ', badge: 'insignia-1.svg', badgeDescription: '梅の花と一段の山形を持つ盾章', level: 1 },
-    { id: 'gold', name: '特別会員', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, fee: 5000, rank: 'Ⅱ', badge: 'insignia-2.svg', badgeDescription: '竹葉と二段の山形を持つ盾章', level: 2 },
-    { id: 'black', name: '名誉会員', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, fee: 10000, rank: 'Ⅲ', badge: 'insignia-3.svg', badgeDescription: '松葉と三段の山形、月桂樹を持つ盾章', level: 3 }
+    { id: 'ordinary', name: '正会員', english: 'RED', tagline: 'まずは、品のある無駄から。', rate: 20, fee: 2000, requiredProducts: 1, rank: 'Ⅰ', badge: 'insignia-1.svg', badgeDescription: '梅の花と一段の山形を持つ盾章', level: 1 },
+    { id: 'gold', name: '特別会員', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, fee: 5000, requiredProducts: 2, rank: 'Ⅱ', badge: 'insignia-2.svg', badgeDescription: '竹葉と二段の山形を持つ盾章', level: 2 },
+    { id: 'black', name: '名誉会員', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, fee: 10000, requiredProducts: 3, rank: 'Ⅲ', badge: 'insignia-3.svg', badgeDescription: '松葉と三段の山形、月桂樹を持つ盾章', level: 3 }
   ]);
   const initial = () => ({ version: 5, membershipCredit: 0, membershipSpent: 0, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
   const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja', { granularity: 'grapheme' }) : null;
@@ -116,7 +116,9 @@
     const plan = plans.find(p => p.id === planId);
     if (!plan) throw new Error('会員プランを選んでください。');
     const cost = Math.max(0, plan.fee - s.membershipCredit);
-    return { cost, balance: s.balance, after: s.balance - cost, affordable: s.balance >= cost };
+    const purchased = owned(s).size, required = plan.requiredProducts;
+    const eligible = purchased >= required, affordable = s.balance >= cost;
+    return { cost, balance: s.balance, after: s.balance - cost, affordable, purchased, required, eligible, canJoin: eligible && affordable };
   }
   const start = read(); unlock(start); save(start);
   window.Muda = {
@@ -182,6 +184,7 @@
       const s = state(), quote = joinQuote(planId, s), plan = plans.find(p => p.id === planId);
       if (expectedCost !== undefined && quote.cost !== expectedCost) throw new Error('会費が変わりました。一度閉じて、金額をご確認ください。');
       if (!quote.affordable) throw new Error('架空の所持金が不足しています。内職で資金を貯めてからお越しください。');
+      if (!quote.eligible) throw new Error(`入会には異なる商品を${quote.required}種類購入する必要があります。現在${quote.purchased}種類です。`);
       if (!integer(s.membershipSpent + quote.cost)) throw new Error('会費の保存上限に達しました。');
       s.balance -= quote.cost; s.membershipSpent += quote.cost;
       s.membershipCredit = Math.max(s.membershipCredit, plan.fee);

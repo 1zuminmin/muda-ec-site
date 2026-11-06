@@ -12,7 +12,7 @@ function boot(map = new Map(), extras = {}) {
   return { m: window.Muda, window, map, context };
 }
 test('registered names normalize and persist independently of money and memberships', () => {
-  const { m, map } = boot(); const funded = m.state(); funded.balance = 5000; map.set(KEY, JSON.stringify(funded)); m.join('gold'); m.setName('　徒労   太郎　');
+  const { m, map } = boot(); const funded = m.state(); funded.balance = 7000; map.set(KEY, JSON.stringify(funded)); m.buy('stone'); m.buy('dot'); m.join('gold'); m.setName('　徒労   太郎　');
   assert.equal(m.state().profile.name, '徒労 太郎'); assert.equal(m.state().balance, 0); assert.equal(m.state().membership.planId, 'gold'); assert.equal(boot(map).m.recipientName(), '徒労 太郎');
 });
 test('names support Japanese, emoji graphemes, clearing and NFC normalization', () => {
