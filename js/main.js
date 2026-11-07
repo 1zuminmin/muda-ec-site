@@ -29,7 +29,7 @@
     const mention = s.completion && M.creatorURL ? `\n@${creatorHandle}` : '';
     return M.xShareURL(`伊見内商会で${s.lap === 2 ? '【2周目】' : ''}累計${M.money(s.totalSpent)}を無駄にしました。\n無用の品 ${count} / ${total}種類。${s.completion ? '\n特別な一品まで制覇。真の無駄使いyerになりました。' : '\nここまでの無意味を、ご報告いたします。'}${mention}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`);
   };
-  M.completionShareNotice = '作者へのメンション付きの完全クリア報告は、原則として無駄名誉会員一覧への掲載対象です。掲載を希望しない場合は、投稿文に「掲載不要」と添えてください。作者が確認して手動で掲載します。';
+  M.completionShareNotice = '完全クリア後は、作者へのメンション付きでXにシェアしてください。作者が投稿を確認し次第、無駄名誉会員一覧に手動でお名前を追加します。掲載を希望しない場合は、投稿文に「掲載不要」と添えてください。反映までお時間をいただく場合があります。';
   M.appShareButton = (url, full = false) => typeof navigator !== 'undefined' && typeof navigator.share === 'function' ? `<button class="button outline ${full ? 'full' : ''}" type="button" data-share-app="${encodeURIComponent(url)}">アプリで共有 ↗</button>` : '';
   M.notifyAchievements = newly => newly.forEach((a, i) => setTimeout(() => M.toast('実績解除 — ' + a.name, a.description), i * 700));
   function renderCollection(s) {

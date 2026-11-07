@@ -67,7 +67,7 @@ test('only completion shares mention the configured author and disclose the opt-
   assert.match(share.searchParams.get('text'), /@izuko_1231/);
   assert.equal(share.searchParams.get('url'), 'https://iminai-shokai.pages.dev/');
   assert.match(completed.node('collection-status').innerHTML, /掲載不要/);
-  assert.match(completed.node('collection-status').innerHTML, /原則として/);
+  assert.match(completed.node('collection-status').innerHTML, /作者が投稿を確認し次第、無駄名誉会員一覧に手動でお名前を追加/);
   assert.match(text(completed.M.shareURL({ productId: 'final-envelope', price: 100000 })), /@izuko_1231/);
   assert.doesNotMatch(text(completed.M.shareURL({ productId: 'stone', price: 500 })), /@izuko_1231/);
   completed.M.setName('公開しないニックネーム');
