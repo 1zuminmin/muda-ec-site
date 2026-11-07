@@ -89,3 +89,11 @@ URLを仕上げて動作確認したら、新しい `pages.dev` のURLを友人�
 無料枠には月500ビルド、1ファイル25MiBなどの制限があります。現在の商品画像は最大約3MBです。利用時点の[公式の上限](https://developers.cloudflare.com/pages/platform/limits/)も確認してください。
 
 広告を導入するときの手順は [PUBLISHING.md](PUBLISHING.md) を参照してください。
+
+## アクセス解析（Cloudflare Web Analytics）
+
+2026年11月7日にユーザーが管理画面で有効化しました。Workers & Pages → iminai-shokai → Metrics → Web Analytics で管理し、結果はWeb Analyticsから確認します。計測タグは次のデプロイ時にCloudflare Pagesが自動で追加します。リポジトリのHTMLへ手動で重ねて追加しないでください。無効化・別の解析サービス導入時は `privacy.html` とREADMEも更新してください。
+
+ゲームの所持金・購入履歴・実績・登録名を計測イベントに送る処理は実装していません。
+
+参考：[Pagesでの有効化](https://developers.cloudflare.com/pages/how-to/web-analytics/)、[集計項目](https://developers.cloudflare.com/web-analytics/data-metrics/dimensions/)。
