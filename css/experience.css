@@ -141,15 +141,15 @@
 .gesture-status > small { display: block; color: var(--muted); font-size: 10px; margin-top: 5px; }
 .envelope-paper { display: block; width: 100%; height: 100%; position: relative; background: linear-gradient(135deg, #e9e2d1, #c9bc9d); border: 1px solid #b5a37c; box-shadow: 0 12px 20px #0004; }
 .envelope-paper::after { content: ''; position: absolute; inset: 30% 0 0; border: 1px solid #b5a37c80; clip-path: polygon(0 100%, 50% 0, 100% 100%); pointer-events: none; }
-.paper-brand { position: absolute; left: 0; right: 0; bottom: 23px; font: 13px var(--serif); letter-spacing: .18em; color: #77633d; }
-.paper-brand small { display: block; font: 7px Georgia, serif; letter-spacing: .17em; margin-top: 7px; }
+.paper-brand { position: absolute; left: 0; right: 0; bottom: 23px; font: 13px var(--serif); letter-spacing: .18em; text-align: center; text-indent: .18em; color: #77633d; }
+.paper-brand small { display: block; font: 7px Georgia, serif; letter-spacing: .17em; text-indent: .17em; margin-top: 7px; }
 .work-flap { position: absolute; top: 0; left: -1px; right: -1px; height: 95px; background: linear-gradient(#eee7d7, #d9ccaf); clip-path: polygon(0 0, 100% 0, 50% 100%); transform-origin: center top; transform: rotateX(180deg); transition: transform .25s ease; backface-visibility: visible; z-index: 2; }
 .work-envelope[data-phase="peel"] .work-flap { transform: rotateX(calc(var(--gesture-progress) * -170deg)); }
 .glue-track { position: absolute; left: 8%; right: 8%; top: -4px; height: 7px; border-bottom: 2px dashed #a9956b; z-index: 3; }
 .glue-fill { display: block; height: 6px; width: calc(var(--gesture-progress) * 100%); background: #fff5d6; box-shadow: 0 0 0 1px #c5b68e; }
 .work-envelope[data-phase="peel"] .glue-track { opacity: .2; }
-.envelope-seal { display: none; position: absolute; top: 74px; left: calc(50% - 15px); width: 30px; height: 30px; background: #9e8455; border-radius: 50%; color: #f5e9cc; font: 14px/30px var(--serif); z-index: 4; }
-.work-envelope[data-phase="peel"] .envelope-seal { display: block; opacity: calc(1 - var(--gesture-progress)); }
+.envelope-seal { display: none; place-items: center; position: absolute; top: 74px; left: calc(50% - 15px); width: 30px; height: 30px; background: #9e8455; border-radius: 50%; color: #f5e9cc; font: 14px/1 var(--serif); text-align: center; letter-spacing: 0; z-index: 4; }
+.work-envelope[data-phase="peel"] .envelope-seal { display: grid; opacity: calc(1 - var(--gesture-progress)); }
 .table-caption { position: absolute; bottom: 13px; left: 10px; right: 10px; text-align: center; color: #9aa1a2; font-size: 9px; letter-spacing: .04em; }
 .rate-card, .work-manual { padding: 32px; background: #14222e; border: 1px solid var(--line); }
 .rate-plan { font: 24px/1.8 var(--serif); margin-top: 15px; }
