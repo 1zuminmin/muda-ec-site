@@ -52,8 +52,7 @@
   const isComplete = s => products.every(p => owned(s).has(p.id));
   const valueFor = (a, s) => a.type === 'count' ? s.history.length : a.type === 'unique' ? owned(s).size : a.type === 'regular' ? regularCount(s) : a.type === 'member-earned' ? (s.earnedByPlan?.[a.planId] || 0) : a.type === 'earned' ? s.earnedTotal : s.totalSpent;
   const workRate = s => (plans.find(p => p.id === s.membership?.planId)?.rate ?? 10) * (s.lap === 2 ? 1.5 : 1);
-  const sortingUnits = s => workRate(s) * 99 + 500;
-  const sortingReward = s => Math.floor((sortingUnits(s) + s.sortingRemainder) / 100);
+  const sortingReward = s => s.lap === 2 ? 225 : 150;
   let fallback = initial(), available = true, corrupt = false;
   const integer = n => Number.isSafeInteger(n) && n >= 0;
   const dateValid = d => typeof d === 'string' && Number.isFinite(Date.parse(d));
@@ -185,7 +184,7 @@
       else {
         amount = sortingReward(s);
         if (![s.balance + amount, s.earnedTotal + amount, s.earnedByPlan.black + amount, s.workCount + 1, s.sortingCount + 1].every(integer)) throw new Error('保存できる金額の上限に達しました。');
-        s.sortingRemainder = (sortingUnits(s) + s.sortingRemainder) % 100;
+        s.sortingRemainder = 0; // Retired fractional-rate field, kept for saved-data compatibility.
         s.balance += amount; s.earnedTotal += amount; s.earnedByPlan.black += amount;
         s.workCount++; s.sortingCount++; s.sortingPhase = 'align';
       }

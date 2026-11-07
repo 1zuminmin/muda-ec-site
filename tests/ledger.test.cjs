@@ -320,19 +320,20 @@ test('sorting is BLACK only, ordered, throttled, and shares the work clock witho
   assert.throws(()=>b.m.sortingStep('scatter')); assert.equal(b.m.sortingStep('align').amount,0); assert.equal(b.m.sortingStep('scatter'),null);
   b.advance(); b.m.leave(); assert.throws(()=>b.m.sortingStep('scatter'), /BLACK/); b.m.join('black');
   const s=b.m.state(); s.workEnvelope='black'; s.workPhase='peel'; b.map.set(KEY,JSON.stringify(s));
-  assert.equal(b.m.sortingStep('scatter').amount,104); assert.equal(b.m.workStep('peel'),null);
+  assert.equal(b.m.sortingStep('scatter').amount,150); assert.equal(b.m.workStep('peel'),null);
   const next=boot({map:b.map}).m.state(); assert.equal(next.workEnvelope,'black'); assert.equal(next.workPhase,'peel');
-  assert.equal(next.sortingCount,1); assert.equal(next.earnedByPlan.black,104); assert.equal(next.earnedTotal,104); assert.equal(next.workCount,1);
+  assert.equal(next.sortingCount,1); assert.equal(next.earnedByPlan.black,150); assert.equal(next.earnedTotal,150); assert.equal(next.workCount,1);
 });
 
-test('second-lap sorting carries half-yen across reloads and membership changes, and never rolls black envelopes',()=>{
+test('second-lap sorting pays 225 after reloads and membership changes, retiring old half-yen balances',()=>{
   const b=boot(); collectRegular(b); memberIncome(b); b.m.buy('final-envelope'); b.m.startSecondLap(); own(b); fund(b,50000); b.m.join('black');
+  const old=b.m.state(); old.sortingRemainder=50; b.map.set(KEY,JSON.stringify(old));
   const rewards=[];
   for(let i=0;i<4;i++) {
     b.advance(); b.m.sortingStep('align'); b.advance(); rewards.push(b.m.sortingStep('scatter').amount);
-    if(i===0) { assert.equal(boot({map:b.map}).m.state().sortingRemainder,50); b.m.leave(); b.m.join('black'); }
+    if(i===0) { assert.equal(boot({map:b.map}).m.state().sortingRemainder,0); b.m.leave(); b.m.join('black'); }
   }
-  assert.equal(rewards.join(','),'153,154,153,154'); assert.equal(b.m.state().earnedByPlan.black,614);
+  assert.equal(rewards.join(','),'225,225,225,225'); assert.equal(b.m.state().earnedByPlan.black,900);
   assert.equal(b.m.state().workEnvelope,'normal'); assert.equal(b.m.state().workPhase,'seal'); assert.equal(b.m.state().sortingRemainder,0);
 });
 
