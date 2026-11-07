@@ -52,7 +52,7 @@
   const isComplete = s => products.every(p => owned(s).has(p.id));
   const valueFor = (a, s) => a.type === 'count' ? s.history.length : a.type === 'unique' ? owned(s).size : a.type === 'regular' ? regularCount(s) : a.type === 'member-earned' ? (s.earnedByPlan?.[a.planId] || 0) : a.type === 'earned' ? s.earnedTotal : s.totalSpent;
   const workRate = s => (plans.find(p => p.id === s.membership?.planId)?.rate ?? 10) * (s.lap === 2 ? 1.5 : 1);
-  const sortingReward = s => 150 * (workRate(s) / 10);
+  const sortingReward = s => s.lap === 2 ? 225 : 150;
   let fallback = initial(), available = true, corrupt = false;
   const integer = n => Number.isSafeInteger(n) && n >= 0;
   const dateValid = d => typeof d === 'string' && Number.isFinite(Date.parse(d));

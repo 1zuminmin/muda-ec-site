@@ -82,7 +82,7 @@ test('BLACK sorting needs three taps and a downward flick, preserving both jobs'
   drag(h,{}); h.advance(); assert.equal(h.m.state().sortingPhase,'scatter'); assert.equal(h.envelope.dataset.phase,'scatter');
   h.nodes.get('job-restore').fire('click'); drag(h,{clientX:120}); h.advance(); assert.equal(h.m.state().workPhase,'peel');
   h.nodes.get('job-sort').fire('click'); assert.equal(h.envelope.dataset.phase,'scatter'); drag(h,{clientY:-70}); assert.equal(h.m.state().earnedTotal,0); drag(h,{clientY:70});
-  assert.equal(h.m.state().earnedTotal,1500); assert.equal(h.m.state().workPhase,'peel'); assert.equal(h.envelope.dataset.kind,'normal');
+  assert.equal(h.m.state().earnedTotal,150); assert.equal(h.m.state().workPhase,'peel'); assert.equal(h.envelope.dataset.kind,'normal');
   h.m.leave(); assert.equal(h.nodes.get('manual-restore').hidden,false); assert.equal(h.nodes.get('manual-sort').hidden,true); assert.match(h.nodes.get('work-rate-description').textContent,/糊で閉じて/); assert.equal(h.envelope.dataset.job,'restore'); assert.equal(h.nodes.get('job-sort').disabled,true);
 });
 
@@ -99,8 +99,8 @@ test('sorting taps ignore drags and cancellation; keyboard presses count once an
   h.envelope.fire('keydown',{key:' '}); h.envelope.fire('keyup',{key:' '}); assert.equal(h.m.state().sortingPhase,'scatter');
   h.advance(); for(const end of [{clientY:20},{clientY:-100},{clientX:120,clientY:70}]) drag(h,end);
   drag(h,{clientY:90},'pointercancel'); assert.equal(h.m.state().earnedTotal,0);
-  drag(h,{clientY:90}); assert.equal(h.m.state().earnedTotal,1500); assert.equal(h.m.state().sortingPhase,'align');
+  drag(h,{clientY:90}); assert.equal(h.m.state().earnedTotal,150); assert.equal(h.m.state().sortingPhase,'align');
   h.advance(); for(let i=0;i<3;i++) {h.envelope.fire('keydown',{key:'Enter'});h.envelope.fire('keyup',{key:'Enter'});}
   assert.equal(h.m.state().sortingPhase,'scatter'); h.envelope.fire('keydown',{key:'ArrowDown'}); h.advance(800); h.envelope.fire('keyup',{key:'ArrowDown'});
-  assert.equal(h.m.state().earnedTotal,3000); assert.equal(h.m.state().workCount,2);
+  assert.equal(h.m.state().earnedTotal,300); assert.equal(h.m.state().workCount,2);
 });
