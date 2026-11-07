@@ -24,7 +24,7 @@ function harness() {
   const nodes = new Map([...html.matchAll(/id="([^"]+)"/g)].map(m => [m[1], new Element()]));
   const window = new EventTarget(), map = new Map(), documentEvents = {};
   const document = { hidden: false, addEventListener: (type, fn) => { documentEvents[type] = fn; }, getElementById(id) { assert.ok(nodes.has(id), `missing actual HTML element ${id}`); return nodes.get(id); } };
-  const context = vm.createContext({ window, document, Date: Clock, CustomEvent, structuredClone, crypto: require('node:crypto').webcrypto, setInterval(fn) { timers.set(++nextTimer, fn); return nextTimer; }, clearInterval: id => timers.delete(id), localStorage: { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) } });
+  const context = vm.createContext({ window, document, Date: Clock, CustomEvent, structuredClone, crypto: require('./helpers/normal-crypto.cjs'), setInterval(fn) { timers.set(++nextTimer, fn); return nextTimer; }, clearInterval: id => timers.delete(id), localStorage: { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) } });
   vm.runInContext(fs.readFileSync(path.join(root, 'js/storage.js'), 'utf8'), context);
   window.Muda.toast = () => {}; window.Muda.notifyAchievements = () => {};
   window.Muda.paperSound = { enabled: true, supported: true, unlock() {}, rub() { sounds.push('rub'); }, finish(type) { sounds.push(type); }, setEnabled(value) { this.enabled = value; } };

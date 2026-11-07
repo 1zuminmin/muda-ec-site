@@ -31,7 +31,7 @@
     { id: 'gold', name: '特別会員', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, fee: 5000, requiredProducts: 2, rank: 'Ⅱ', badge: 'insignia-2.svg', badgeDescription: '竹葉と二段の山形を持つ盾章', level: 2 },
     { id: 'black', name: '名誉会員', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, fee: 10000, requiredProducts: 3, rank: 'Ⅲ', badge: 'insignia-3.svg', badgeDescription: '松葉と三段の山形、月桂樹を持つ盾章', level: 3 }
   ]);
-  const initial = () => ({ version: 6, earnedByPlan: { ordinary: 0, gold: 0, black: 0 }, membershipCredit: 0, membershipSpent: 0, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
+  const initial = () => ({ version: 8, paidPlans: [], workEnvelope: 'normal', earnedByPlan: { ordinary: 0, gold: 0, black: 0 }, membershipCredit: 0, membershipSpent: 0, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
   const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja', { granularity: 'grapheme' }) : null;
   const nameLength = name => segmenter ? Array.from(segmenter.segment(name)).length : Array.from(name).length;
   function normalizeName(value) {
@@ -57,7 +57,7 @@
   const dateValid = d => typeof d === 'string' && Number.isFinite(Date.parse(d));
   const snapshotValid = r => r && dateValid(r.date) && integer(r.totalSpent) && integer(r.count);
   function baseValid(s) {
-    return s && [1, 2, 3, 4, 5, 6].includes(s.version) && integer(s.balance) && integer(s.totalSpent) && Array.isArray(s.history) && s.history.every(p => products.some(a => a.id === p.productId && (a.price === p.price || a.legacyPrice === p.price)) && typeof p.id === 'string' && /^[A-Za-z0-9-]+$/.test(p.id) && dateValid(p.date)) && s.history.reduce((sum, p) => sum + p.price, 0) === s.totalSpent && Array.isArray(s.unlocked) && s.unlocked.every(id => achievements.some(a => a.id === id) || (s.version < 6 && ['return', 'master', 'worker'].includes(id))) && dateValid(s.lastUsed);
+    return s && [1, 2, 3, 4, 5, 6, 7, 8].includes(s.version) && integer(s.balance) && integer(s.totalSpent) && Array.isArray(s.history) && s.history.every(p => products.some(a => a.id === p.productId && (a.price === p.price || a.legacyPrice === p.price)) && typeof p.id === 'string' && /^[A-Za-z0-9-]+$/.test(p.id) && dateValid(p.date)) && s.history.reduce((sum, p) => sum + p.price, 0) === s.totalSpent && Array.isArray(s.unlocked) && s.unlocked.every(id => achievements.some(a => a.id === id) || (s.version < 6 && ['return', 'master', 'worker'].includes(id))) && dateValid(s.lastUsed);
   }
   // Only used to safely retire an in-progress result from the previous release.
   function oldRoundValid(r) {
@@ -68,6 +68,8 @@
     if (s.version === 1) return true;
     if (!integer(s.workCount) || !integer(s.workLastAt) || !integer(s.earnedTotal) || !(s.membership === null || (plans.some(p => p.id === s.membership.planId) && dateValid(s.membership.since)))) return false;
     if (s.version === 2) return s.earnedTotal === s.workCount * 10 && Array.isArray(s.rounds) && (s.pendingRound === null || oldRoundValid(s.pendingRound)) && (s.completion === null || snapshotValid(s.completion));
+    if (s.version >= 7 && !['normal', 'black'].includes(s.workEnvelope)) return false;
+    if (s.version >= 8 && (!Array.isArray(s.paidPlans) || new Set(s.paidPlans).size !== s.paidPlans.length || !s.paidPlans.every(id => plans.some(p => p.id === id)) || (s.membership && !s.paidPlans.includes(s.membership.planId)))) return false;
     if (s.version >= 6 && (!s.earnedByPlan || !plans.every(p => integer(s.earnedByPlan[p.id])) || !integer(plans.reduce((sum, p) => sum + s.earnedByPlan[p.id], 0)) || plans.reduce((sum, p) => sum + s.earnedByPlan[p.id], 0) > s.earnedTotal)) return false;
     return (s.version < 5 || (integer(s.membershipCredit) && [0, ...plans.map(p => p.fee)].includes(s.membershipCredit) && integer(s.membershipSpent) && (!s.membership || s.membershipCredit >= plans.find(p => p.id === s.membership.planId).fee))) && (s.version === 3 || profileValid(s.profile)) && ['seal', 'peel'].includes(s.workPhase) && (s.standardCompletion === null || (snapshotValid(s.standardCompletion) && allRegularPurchased(s))) && (s.completion === null || (snapshotValid(s.completion) && isComplete(s))) && (!owned(s).has('final-envelope') || allRegularPurchased(s));
   }
@@ -87,11 +89,13 @@
     return next;
   }
   function migrate(s) {
-    if (s.version === 6) return s;
+    if (s.version === 8) return s;
+    const priorPlans = prior => plans.filter(p => p.fee <= prior.membershipCredit).map(p => p.id);
+    if (s.version >= 6) return { ...s, version: 8, workEnvelope: s.workEnvelope || 'normal', paidPlans: priorPlans(s) };
     const next = migrateLegacy(s);
     // Earlier versions did not record which rank earned each payment.
     // Preserve all money and records, but do not guess historical rank totals.
-    return { ...next, version: 6, earnedByPlan: { ordinary: 0, gold: 0, black: 0 }, unlocked: next.unlocked.filter(id => !['return', 'master', 'worker'].includes(id)) };
+    return { ...next, version: 8, workEnvelope: 'normal', paidPlans: priorPlans(next), earnedByPlan: { ordinary: 0, gold: 0, black: 0 }, unlocked: next.unlocked.filter(id => !['return', 'master', 'worker'].includes(id)) };
   }
   function read() {
     try {
@@ -124,10 +128,12 @@
   function joinQuote(planId, s = state()) {
     const plan = plans.find(p => p.id === planId);
     if (!plan) throw new Error('会員プランを選んでください。');
-    const cost = Math.max(0, plan.fee - s.membershipCredit);
+    const current = s.membership?.planId === planId;
+    const returning = s.paidPlans.includes(planId);
+    const cost = current || returning ? 0 : plan.fee;
     const purchased = owned(s).size, required = plan.requiredProducts;
     const eligible = purchased >= required, affordable = s.balance >= cost;
-    return { cost, balance: s.balance, after: s.balance - cost, affordable, purchased, required, eligible, canJoin: eligible && affordable };
+    return { cost, balance: s.balance, after: s.balance - cost, affordable, purchased, required, eligible, current, returning, canJoin: !current && eligible && affordable };
   }
   const start = read(); unlock(start); save(start);
   window.Muda = {
@@ -155,6 +161,7 @@
     visibleProducts: (s = state()) => products.filter(p => !p.secret || specialUnlocked(s)),
     canView: (productId, s = state()) => products.some(p => p.id === productId && (!p.secret || specialUnlocked(s))),
     workRate: (s = state()) => workRate(s),
+    workReward: (s = state()) => s.workEnvelope === 'black' ? 500 : workRate(s),
     money: n => '¥' + n.toLocaleString('ja-JP'),
     get persistent() { return available; },
     get corrupt() { return corrupt; },
@@ -180,9 +187,10 @@
       if (!['seal', 'peel'].includes(action) || action !== s.workPhase) throw new Error('いまの作業手順をご確認ください。');
       if (now - s.workLastAt < 180) return null;
       let amount = 0;
+      const completedEnvelope = s.workEnvelope;
       if (action === 'seal') s.workPhase = 'peel';
       else {
-        amount = workRate(s);
+        amount = s.workEnvelope === 'black' ? 500 : workRate(s);
         if (!integer(s.balance + amount) || !integer(s.earnedTotal + amount) || !integer(s.workCount + 1)) throw new Error('保存できる金額の上限に達しました。');
         const planId = s.membership?.planId;
         if (planId) {
@@ -190,19 +198,22 @@
           s.earnedByPlan[planId] += amount;
         }
         s.balance += amount; s.earnedTotal += amount; s.workCount++; s.workPhase = 'seal';
+        s.workEnvelope = crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296 < 0.01 ? 'black' : 'normal';
       }
       s.workLastAt = now;
       const newly = unlock(s); save(s);
-      return { amount, phase: s.workPhase, newly, invitationNow: !wasInvited && specialUnlocked(s) };
+      return { amount, phase: s.workPhase, envelope: completedEnvelope, nextEnvelope: s.workEnvelope, newly, invitationNow: !wasInvited && specialUnlocked(s) };
     },
     join(planId, expectedCost) {
       const s = state(), quote = joinQuote(planId, s), plan = plans.find(p => p.id === planId);
+      if (quote.current) throw new Error('すでに現在の会員プランです。');
       if (expectedCost !== undefined && quote.cost !== expectedCost) throw new Error('会費が変わりました。一度閉じて、金額をご確認ください。');
       if (!quote.affordable) throw new Error('架空の所持金が不足しています。内職で資金を貯めてからお越しください。');
       if (!quote.eligible) throw new Error(`入会には異なる商品を${quote.required}種類購入する必要があります。現在${quote.purchased}種類です。`);
       if (!integer(s.membershipSpent + quote.cost)) throw new Error('会費の保存上限に達しました。');
       s.balance -= quote.cost; s.membershipSpent += quote.cost;
       s.membershipCredit = Math.max(s.membershipCredit, plan.fee);
+      if (!s.paidPlans.includes(planId)) s.paidPlans.push(planId);
       s.membership = { planId, since: s.membership?.since || new Date().toISOString() }; save(s);
       return quote;
     },

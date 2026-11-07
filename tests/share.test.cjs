@@ -9,7 +9,7 @@ test('all share links include the public site URL even when played locally', () 
   for (const href of ['http://localhost:8080/shop.html', 'file:///C:/shop.html', 'https://1zuminmin.github.io/muda-ec-site/achievements.html']) {
     const window = new EventTarget(), map = new Map();
     const context = vm.createContext({ window, Date, CustomEvent, structuredClone, URLSearchParams,
-      location: new URL(href), crypto: require('node:crypto').webcrypto,
+      location: new URL(href), crypto: require('./helpers/normal-crypto.cjs'),
       localStorage: { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) }
     });
     vm.runInContext(read('js/storage.js'), context);

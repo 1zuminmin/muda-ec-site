@@ -5,16 +5,17 @@ const path = require('node:path');
 const vm = require('node:vm');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 
-function render(override, complete = false) {
+function render(override, complete = false, nativeShare) {
   const window = new EventTarget(), map = new Map(), nodes = new Map();
   const element = () => ({ innerHTML: '', textContent: '', hidden: false, insertAdjacentHTML() {} });
   const node = id => { if (!nodes.has(id)) nodes.set(id, element()); return nodes.get(id); };
   const policy = element(), pending = element(), creator = element(), unset = element();
+  const events = {};
   const document = {
-    body: { dataset: { page: 'author' } }, getElementById: node, addEventListener() {}, querySelector: () => null,
+    body: { dataset: { page: 'author' } }, getElementById: node, addEventListener: (type, fn) => { events[type] = fn; }, querySelector: () => null,
     querySelectorAll: selector => ({ '[data-streaming-policy]': [policy], '[data-streaming-pending]': [pending], '[data-creator-x]': [creator], '[data-creator-unset]': [unset] })[selector] || []
   };
-  const context = vm.createContext({ window, document, Date, CustomEvent, structuredClone, URLSearchParams, setTimeout,
+  const context = vm.createContext({ window, document, Date, CustomEvent, structuredClone, URLSearchParams, URL, setTimeout, navigator: nativeShare,
     localStorage: { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) }
   });
   vm.runInContext(read('js/storage.js'), context);
@@ -29,7 +30,7 @@ function render(override, complete = false) {
   }
   vm.runInContext(read('js/main.js'), context);
   vm.runInContext(read('js/certificate.js'), context);
-  return { M, node, creator, unset, policy, pending };
+  return { M, node, creator, unset, policy, pending, events };
 }
 
 test('author X and approved streaming policy appear in author page, footer and completed collection', () => {
@@ -75,4 +76,17 @@ test('only completion shares mention the configured author and disclose the opt-
   assert.match(text(changed.M.summaryShareURL()), /@another_author/);
   const unset = render({ creatorX: '', streamingPolicy: 'monetized' }, true);
   assert.doesNotMatch(text(unset.M.summaryShareURL()), /@izuko_1231|@undefined/);
+});
+
+test('app sharing is opt-in, uses the OS chooser and leaves the X web link as a fallback', async () => {
+  const calls = [], r = render(null, true, { share: async data => { calls.push(data); } });
+  assert.match(r.M.appShareButton(r.M.summaryShareURL()), /アプリで共有/);
+  assert.equal(calls.length, 0);
+  const button = { dataset: { shareApp: encodeURIComponent(r.M.summaryShareURL()) } };
+  await r.events.click({ target: { closest: selector => selector === '[data-share-app]' ? button : null } });
+  assert.equal(calls.length, 1); assert.match(calls[0].text, /@izuko_1231/);
+  assert.match(calls[0].text, /https:\/\/1zuminmin.github.io\/muda-ec-site\//);
+  assert.equal(button.disabled, false);
+  assert.match(r.node('collection-status').innerHTML, /twitter.com\/intent\/tweet/);
+  assert.equal(render().M.appShareButton('https://example.com'), '');
 });

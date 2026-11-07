@@ -10,10 +10,13 @@
     const plan = M.memberPlan(s);
     document.getElementById('work-plan').textContent = plan ? `${plan.english} / ${plan.name}` : '未入会';
     document.getElementById('work-phase').textContent = sealed ? '02 / PEEL' : '01 / SEAL';
-    document.getElementById('work-instruction').textContent = sealed ? '今の糊を、上へ引き上げて剥がしてください。' : '右へなぞって、糊を塗ってください。';
-    document.getElementById('gesture-hint').textContent = sealed ? '封筒に指を置き、上へ引き上げてから離してください。' : '封筒に指を置き、右へなぞってから離してください。';
+    document.getElementById('work-instruction').dataset.phase = s.workPhase;
+    document.getElementById('work-copy-seal').setAttribute('aria-hidden', String(sealed));
+    document.getElementById('work-copy-peel').setAttribute('aria-hidden', String(!sealed));
+    document.getElementById('work-envelope-kind').textContent = s.workEnvelope === 'black' ? '特別依頼 ／ 黒封筒・1通500円' : '通常の封筒';
     envelope.dataset.phase = s.workPhase;
-    document.getElementById('work-direction').innerHTML = sealed ? `上へ引き上げて、元に戻す <span>↑</span><small>完了で + ${M.money(M.workRate(s))}</small>` : '右へなぞって、糊を塗る <span>→</span><small>まだ報酬は発生しません</small>';
+    envelope.dataset.kind = s.workEnvelope;
+    document.getElementById('work-direction').innerHTML = sealed ? `上へ引き上げて、元に戻す <span>↑</span><small>完了で + ${M.money(M.workReward(s))}</small>` : `右へなぞって、糊を塗る <span>→</span><small>1往復の完了で + ${M.money(M.workReward(s))}</small>`;
   }
   function soundControl() {
     const button = document.getElementById('paper-sound-toggle');
@@ -26,7 +29,7 @@
     try {
       const r = M.workStep(phase); if (!r) return;
       sound?.finish(phase);
-      document.getElementById('work-result').textContent = r.amount ? `元どおりになりました。何も進んでいません。 + ${M.money(r.amount)}（架空）` : 'しっかり閉じました。次は、上へ引き上げて糊を剥がしてください。';
+      document.getElementById('work-result').textContent = r.amount ? `${r.envelope === 'black' ? '黒封筒のお仕事を完了しました。' : '元どおりになりました。何も進んでいません。'} + ${M.money(r.amount)}（架空）` : 'しっかり閉じました。次は、上へ引き上げて糊を剥がしてください。';
       M.notifyAchievements(r.newly);
       if (r.invitationNow) M.toast('お得意様への特別なご案内です。', '通常8実績と通常9品が揃いました。商品一覧で最後の一品をご覧ください。');
     } catch (e) { M.toast('作業手順をご確認ください。', e.message); render(); }

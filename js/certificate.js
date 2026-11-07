@@ -8,7 +8,7 @@
     const text = `伊見内商会で「${p.name}」に${M.money(purchase.price)}を無駄遣いしました。\nここまでの累計 ${M.money(M.state().totalSpent)}。\n${p.message}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`;
     return M.xShareURL(text);
   };
-  M.downloadCertificate = async purchase => {
+  M.createCertificate = async purchase => {
     const recipient = M.recipientName();
     await document.fonts.ready;
     const p = M.products.find(p => p.id === purchase.productId);
@@ -31,10 +31,9 @@
     line('架空の購入・実際の支払いなし', 994, 25, '#eee9df', sans);
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('画像の保存に失敗しました。');
-    const url = URL.createObjectURL(blob), a = document.createElement('a');
-    a.href = url; a.download = `無駄遣い認定証-${purchase.id}.png`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+    return { blob, filename: `無駄遣い認定証-${purchase.id}.png`, title: '無駄遣い認定証', shareURL: M.shareURL(purchase) };
   };
-  M.downloadCompletion = async () => {
+  M.createCompletion = async () => {
     const s = M.state();
     if (!s.completion) throw new Error('全商品の購入後に感謝状を発行できます。');
     await document.fonts.ready;
@@ -57,7 +56,13 @@
     line('架空の購入・実際の支払いなし', 1100, 23, '#b8a276');
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('画像の保存に失敗しました。');
-    const url = URL.createObjectURL(blob), a = document.createElement('a');
-    a.href = url; a.download = `伊見内商会-全商品購入感謝状.png`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+    return { blob, filename: '伊見内商会-全商品購入感謝状.png', title: '完全クリアの感謝状', shareURL: M.summaryShareURL ? M.summaryShareURL() : '' };
   };
+  function download(artifact) {
+    const url = URL.createObjectURL(artifact.blob), a = document.createElement('a');
+    a.href = url; a.download = artifact.filename; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+  M.downloadCertificate = async purchase => download(await M.createCertificate(purchase));
+  M.downloadCompletion = async () => download(await M.createCompletion());
 })();

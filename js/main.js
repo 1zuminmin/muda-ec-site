@@ -30,12 +30,13 @@
     return M.xShareURL(`伊見内商会で累計${M.money(s.totalSpent)}を無駄にしました。\n無用の品 ${count} / ${total}種類。${s.completion ? '\n特別な一品まで制覇。真の無駄使いyerになりました。' : '\nここまでの無意味を、ご報告いたします。'}${mention}\n架空の購入・実際の支払いなし\n#伊見内商会 #無駄遣い`);
   };
   M.completionShareNotice = '作者へのメンション付きの完全クリア報告は、原則として無駄名誉会員一覧への掲載対象です。掲載を希望しない場合は、投稿文に「掲載不要」と添えてください。作者が確認して手動で掲載します。';
+  M.appShareButton = (url, full = false) => typeof navigator !== 'undefined' && typeof navigator.share === 'function' ? `<button class="button outline ${full ? 'full' : ''}" type="button" data-share-app="${encodeURIComponent(url)}">アプリで共有 ↗</button>` : '';
   M.notifyAchievements = newly => newly.forEach((a, i) => setTimeout(() => M.toast('実績解除 — ' + a.name, a.description), i * 700));
   function renderCollection(s) {
     const node = document.getElementById('collection-status');
     if (!node) return;
     const { count, total } = M.collectionProgress(s), invited = M.specialUnlocked(s);
-    node.innerHTML = s.completion ? `<section class="completion-board" aria-label="全商品購入の感謝状"><p class="eyebrow">WITH OUR DEEPEST, MOST USELESS GRATITUDE</p><div class="completion-mark" aria-hidden="true">◇</div><h2>すべての無意味を、あなたへ。</h2><p class="completion-quote">${M.completionText}</p><p class="subtle">特別な一品を含む全${M.products.length}種類を収集 ／ 達成時の累計 ${M.money(s.completion.totalSpent)}（架空）</p><p class="completion-share-note">${M.completionShareNotice}</p><div class="inline-actions"><button class="button gold" data-download-completion>完全クリアの感謝状をPNGで保存 ↓</button><a class="button outline" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">完全クリアをXで共有 ↗</a></div><p class="fine">会員番号の発行は今後対応予定です。感謝状は何度でも保存できます。</p><p><a class="text-link" href="honor-roll.html#request">無駄名誉会員一覧への掲載について ↗</a></p><div class="completion-author"><p>最後までお付き合いいただき、ありがとうございました。</p>${M.creatorURL ? creatorLink('この無意味を作った作者のX') : '<a class="text-link" href="author.html#creator">作者の制作室へ ↗</a>'}</div></section>` : `<section class="collection-progress"><div><p class="eyebrow">YOUR COLLECTION</p><h3>${invited ? 'お得意様への特別なご案内です。' : '無用の品を、ひとつずつ。'}</h3><p>${invited ? '通常8実績と通常9品を揃えたあなたに、最後の一品をご用意しました。' : M.regularCount(s) < 9 ? 'まずは9品を目指して、無意味を集めてみませんか。' : '通常9品が揃いました。通常8実績も達成すると、特別なご案内をお届けします。'}</p>${invited ? '<a class="text-link" href="shop.html#private-collection">特別な一品を見る ↗</a>' : ''}</div><div class="collection-progress-detail"><label for="collection-progress"><strong>${count} <small>/ ${total}種類</small></strong><span>累計 ${M.money(s.totalSpent)}（架空）</span></label><progress id="collection-progress" max="${total}" value="${count}">${count} / ${total}</progress><a class="text-link" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">ここまでの無駄遣いをXで共有 ↗</a></div></section>`;
+    node.innerHTML = s.completion ? `<section class="completion-board" aria-label="全商品購入の感謝状"><p class="eyebrow">WITH OUR DEEPEST, MOST USELESS GRATITUDE</p><div class="completion-mark" aria-hidden="true">◇</div><h2>すべての無意味を、あなたへ。</h2><p class="completion-quote">${M.completionText}</p><p class="subtle">特別な一品を含む全${M.products.length}種類を収集 ／ 達成時の累計 ${M.money(s.completion.totalSpent)}（架空）</p><p class="completion-share-note">${M.completionShareNotice}</p><div class="inline-actions"><button class="button gold" data-download-completion>完全クリアの感謝状をPNGで保存 ↓</button><a class="button outline" href="certificate.html?complete=1">感謝状の画像を開く ↗</a><a class="button outline" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">完全クリアをXで共有 ↗</a>${M.appShareButton(M.summaryShareURL())}</div><p class="fine">会員番号の発行は今後対応予定です。感謝状は何度でも保存できます。</p><p><a class="text-link" href="honor-roll.html#request">無駄名誉会員一覧への掲載について ↗</a></p><div class="completion-author"><p>最後までお付き合いいただき、ありがとうございました。</p>${M.creatorURL ? creatorLink('この無意味を作った作者のX') : '<a class="text-link" href="author.html#creator">作者の制作室へ ↗</a>'}</div></section>` : `<section class="collection-progress"><div><p class="eyebrow">YOUR COLLECTION</p><h3>${invited ? 'お得意様への特別なご案内です。' : '無用の品を、ひとつずつ。'}</h3><p>${invited ? '通常8実績と通常9品を揃えたあなたに、最後の一品をご用意しました。' : M.regularCount(s) < 9 ? 'まずは9品を目指して、無意味を集めてみませんか。' : '通常9品が揃いました。通常8実績も達成すると、特別なご案内をお届けします。'}</p>${invited ? '<a class="text-link" href="shop.html#private-collection">特別な一品を見る ↗</a>' : ''}</div><div class="collection-progress-detail"><label for="collection-progress"><strong>${count} <small>/ ${total}種類</small></strong><span>累計 ${M.money(s.totalSpent)}（架空）</span></label><progress id="collection-progress" max="${total}" value="${count}">${count} / ${total}</progress><a class="text-link" href="${M.summaryShareURL()}" target="_blank" rel="noopener noreferrer">ここまでの無駄遣いをXで共有 ↗</a>${M.appShareButton(M.summaryShareURL())}</div></section>`;
   }
   function renderInvitation(s) {
     const section = document.getElementById('private-collection');
@@ -46,10 +47,21 @@
     section.innerHTML = `<div class="invitation-copy"><p class="eyebrow">A PRIVATE OFFER FOR OUR MOST VALUED CUSTOMER</p><h2>お得意様への<br>特別なご案内です。</h2><p>通常8実績と9品を揃えたあなたへ。<br>弊社が最後にご用意したのは、<br>あなた自身の徒労でございます。</p><span class="subtle">この一品の購入で、完全クリアとなります。</span></div><div class="private-product">${M.card(p, M.products.indexOf(p), true)}</div>`;
   }
   document.addEventListener('click', async e => {
+    const app = e.target.closest('[data-share-app]');
+    if (app) {
+      app.disabled = true;
+      try {
+        const params = new URL(decodeURIComponent(app.dataset.shareApp)).searchParams;
+        await navigator.share({ title: '伊見内商会', text: [params.get('text'), params.get('url')].filter(Boolean).join('\n') });
+      } catch (error) {
+        if (error.name !== 'AbortError') M.toast('アプリ共有を開けませんでした。', 'Xの投稿画面へのリンクもご利用いただけます。');
+      } finally { app.disabled = false; }
+      return;
+    }
     const button = e.target.closest('[data-download-completion]');
     if (!button) return;
     button.disabled = true;
-    try { await M.downloadCompletion(); M.toast('心より、御礼申し上げます。', '全商品購入の感謝状を保存しました。'); }
+    try { await M.downloadCompletion(); M.toast('心より、御礼申し上げます。', 'PNGの保存を開始しました。保存できない場合は「感謝状の画像を開く」をお試しください。'); }
     catch (e) { M.toast('感謝状を保存できませんでした。', e.message); }
     finally { button.disabled = false; }
   });

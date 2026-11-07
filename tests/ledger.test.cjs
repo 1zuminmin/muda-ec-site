@@ -5,11 +5,11 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../js/storage.js'), 'utf8');
 const KEY = 'muda-shokai:v1';
-function boot({ map = new Map(), blocked = false, now = Date.now() } = {}) {
+function boot({ map = new Map(), blocked = false, now = Date.now(), rng = require('./helpers/normal-crypto.cjs') } = {}) {
   let clock = now;
   class Clock extends Date { constructor(...args) { super(...(args.length ? args : [clock])); } static now() { return clock; } }
   const window = new EventTarget();
-  vm.runInContext(source, vm.createContext({ window, CustomEvent, structuredClone, crypto: require('node:crypto').webcrypto, Date: Clock, localStorage: {
+  vm.runInContext(source, vm.createContext({ window, CustomEvent, structuredClone, crypto: rng, Date: Clock, localStorage: {
     getItem(k) { if (blocked) throw Error('denied'); return map.get(k) ?? null; },
     setItem(k, v) { if (blocked) throw Error('quota'); map.set(k, v); },
     removeItem(k) { if (blocked) throw Error('denied'); map.delete(k); }
@@ -27,15 +27,32 @@ function collectRegular(b) { fund(b, 300000); let last; for (const p of b.m.regu
 
 function fund(b, balance) { const s = b.m.state(); s.balance = balance; b.map.set(KEY, JSON.stringify(s)); }
 test('new game starts at zero with eight regular honors and nine visible products', () => {
- const {m}=boot(); assert.equal(m.state().version,6); assert.equal(m.state().balance,0); assert.equal(m.regularAchievements.length,8); assert.equal(m.visibleProducts().length,9); assert.equal(m.startRound,undefined);
+ const {m}=boot(); assert.equal(m.state().version,8); assert.equal(m.state().balance,0); assert.equal(m.regularAchievements.length,8); assert.equal(m.visibleProducts().length,9); assert.equal(m.startRound,undefined);
 });
 test('all ten prices are five times the historical prices',()=>{const {m}=boot(); for(const p of m.products) assert.equal(p.price,p.legacyPrice*5); assert.equal(m.products.reduce((n,p)=>n+p.price,0),171000);});
 test('work requires seal then peel, survives reload and pays once',()=>{const b=boot(); assert.throws(()=>b.m.workStep('peel')); b.m.workStep('seal');assert.equal(b.m.workStep('peel'),null);b.advance();const next=boot({map:b.map,now:Date.now()+1000}).m;assert.equal(next.workStep('peel').amount,10);assert.throws(()=>b.m.workStep('peel'));assert.equal(b.m.state().balance,10);});
 test('insufficient funds and stale membership quotes cannot charge or change plans',()=>{const b=boot();assert.throws(()=>b.m.join('ordinary'),/不足/);fund(b,10000);assert.throws(()=>b.m.join('gold',0),/変わり/);assert.equal(b.m.state().balance,10000);assert.equal(b.m.state().membership,null);});
-test('dues charge once, upgrades charge differences, downgrade and rejoin never refund or recharge',()=>{const b=boot();own(b);fund(b,10000);for(const [id,cost,rate] of [['ordinary',2000,20],['gold',3000,50],['black',5000,100]]){assert.equal(b.m.joinQuote(id).cost,cost);b.m.join(id,cost);assert.equal(b.m.workRate(),rate);}assert.equal(b.m.state().balance,0);assert.equal(b.m.state().membershipSpent,10000);assert.equal(b.m.state().totalSpent,7000);b.m.join('ordinary');b.m.leave();b.m.join('black');assert.equal(b.m.state().balance,0);assert.equal(b.m.state().membershipSpent,10000);assert.equal(boot({map:b.map}).m.workRate(),100);});
+test('first enrollment in each plan charges the full fee, while returning to a paid plan is free', () => {
+  const b = boot(); own(b); fund(b, 50000);
+  for (const [id, fee, rate] of [['ordinary',2000,20],['gold',5000,50],['black',10000,100]]) {
+    assert.equal(b.m.joinQuote(id).cost, fee); b.m.join(id, fee); assert.equal(b.m.workRate(), rate);
+  }
+  assert.equal(b.m.state().balance, 33000); assert.equal(b.m.state().membershipSpent, 17000);
+  const before = JSON.stringify(b.m.state()); assert.throws(() => b.m.join('black'), /現在/);
+  assert.equal(JSON.stringify(b.m.state()), before);
+  b.m.join('ordinary'); assert.equal(b.m.state().balance, 33000);
+  b.m.leave(); b.m.join('black'); assert.equal(b.m.state().balance, 33000);
+  assert.equal(b.m.state().membershipSpent, 17000); assert.equal(b.m.state().totalSpent, 7000);
+  assert.equal(boot({ map: b.map }).m.workRate(), 100);
+});
 test('membership at peeling controls pay and keeps income separate',()=>{const b=boot();own(b);fund(b,10000);b.m.workStep('seal');b.m.join('black');b.advance();assert.equal(b.m.workStep('peel').amount,100);assert.equal(b.m.state().earnedTotal,100);assert.equal(b.m.state().totalSpent,7000);});
 test('new purchases debit new prices; old history and certificates retain original prices',()=>{const b=boot({map:new Map([[KEY,JSON.stringify(legacy())]])});assert.equal(b.m.corrupt,false);assert.equal(b.m.state().totalSpent,1400);assert.equal(b.m.buy('stone').purchase.price,500);assert.equal(b.m.state().balance,8100);assert.equal(b.m.state().totalSpent,1900);assert.equal(b.m.state().history[0].price,100);assert.equal(boot({map:b.map}).m.state().totalSpent,1900);});
-test('existing members inherit credit without retroactive charges and upgrade by difference',()=>{const s=legacy(2);s.membership={planId:'gold',since:s.lastUsed};const b=boot({map:new Map([[KEY,JSON.stringify(s)]])});assert.equal(b.m.state().balance,8600);assert.equal(b.m.state().membershipCredit,5000);assert.equal(b.m.state().membershipSpent,0);b.m.join('black');assert.equal(b.m.state().balance,3600);assert.equal(b.m.state().membershipSpent,5000);});
+test('existing members keep their rank without retroactive charges, but the next upgrade costs full price', () => {
+  const s=legacy(2); s.membership={planId:'gold',since:s.lastUsed}; const b=boot({map:new Map([[KEY,JSON.stringify(s)]])});
+  assert.equal(b.m.workRate(),50); assert.equal(b.m.state().balance,8600); assert.equal(b.m.joinQuote('black').cost,10000);
+  assert.throws(()=>b.m.join('black'), /不足/); fund(b,12000); b.m.join('black');
+  assert.equal(b.m.state().balance,2000); assert.equal(b.m.state().membershipSpent,10000);
+});
 test('v2 pending win retires and settles only once',()=>{const s=legacy(2);s.pendingRound={stake:500,die1:1,die2:1,choice:'cho',won:true};const b=boot({map:new Map([[KEY,JSON.stringify(s)]])});assert.equal(b.m.state().balance,9600);assert.equal(b.m.state().rounds,undefined);assert.equal(boot({map:b.map}).m.state().balance,9600);});
 test('hidden item is inaccessible before all nine distinct purchases',()=>{const b=boot();fund(b,300000);assert.throws(()=>b.m.buy('final-envelope'),/ご案内/);for(let i=0;i<9;i++)b.m.buy('stone');assert.equal(b.m.regularCount(),1);assert.equal(b.m.canView('final-envelope'),false);});
 test('nine products plus all normal honors unlock the final purchase and preserve completion',()=>{const b=boot();const last=collectRegular(b);assert.equal(last.invitationNow,false);assert.equal(last.completedNow,false);assert.equal(b.m.state().standardCompletion.totalSpent,71000);b.m.resetBalance();assert.throws(()=>b.m.buy('final-envelope'),/ご案内/);memberIncome(b);assert.throws(()=>b.m.buy('final-envelope'),/不足/);fund(b,200000);const r=b.m.buy('final-envelope');assert.equal(r.purchase.price,100000);assert.equal(r.completedNow,true);assert.equal(b.m.state().completion.totalSpent,171000);const snapshot=JSON.stringify(b.m.state().completion);assert.equal(b.m.buy('final-envelope').completedNow,false);assert.equal(JSON.stringify(boot({map:b.map}).m.state().completion),snapshot);assert.equal(b.m.regularHonorCount(),8);});
@@ -52,7 +69,7 @@ test('v4 migration preserves the name and grants only the current membership cre
   assert.equal(m.recipientName(), '徒労 太郎');
   assert.equal(m.state().balance, 1234);
   assert.equal(m.state().membershipCredit, 2000);
-  assert.equal(m.joinQuote('gold').cost, 3000);
+  assert.equal(m.joinQuote('gold').cost, 5000);
 });
 test('old nine-product completion remains a milestone at its original price', () => {
   const s = legacy(2), catalog = boot().m.regularProducts;
@@ -119,10 +136,21 @@ test('repeat copies count once and meeting purchase requirements does not waive 
 });
 test('existing membership remains active; rejoining rechecks the purchase requirement', () => {
   const s = boot().m.state(); s.membership = { planId: 'black', since: s.lastUsed }; s.membershipCredit = 10000;
+  s.paidPlans = ['black'];
   const b = boot({ map: new Map([[KEY, JSON.stringify(s)]]) });
   assert.equal(b.m.workRate(), 100); assert.equal(b.m.corrupt, false);
-  b.m.leave(); assert.throws(() => b.m.join('black'), /3種類/);
+  b.m.leave(); fund(b, 10000); assert.throws(() => b.m.join('black'), /3種類/);
   assert.equal(b.m.state().membership, null); assert.equal(b.m.state().membershipCredit, 10000);
+});
+
+test('free rejoining is tied to the exact paid plans and survives reload at zero balance', () => {
+  const b = boot(); own(b); fund(b, 10000); b.m.join('black'); b.m.leave();
+  assert.equal(b.m.state().balance, 0);
+  const m = boot({ map: b.map }).m;
+  assert.equal(m.joinQuote('black').cost, 0); assert.equal(m.joinQuote('black').canJoin, true);
+  assert.equal(m.joinQuote('ordinary').cost, 2000); assert.equal(m.joinQuote('gold').cost, 5000);
+  m.join('black'); assert.equal(m.state().balance, 0); assert.equal(m.state().membershipSpent, 10000);
+  m.clear(); assert.equal(m.state().paidPlans.length, 0);
 });
 
 test('replacement honors at No3 No4 No7 unlock once after 500 paid round trips per rank', () => {
@@ -162,7 +190,7 @@ test('v5 migration retires old honors without inventing rank income or changing 
   s.membership = { planId: 'gold', since: s.lastUsed }; s.membershipCredit = 5000;
   s.unlocked = ['first', 'planned', 'return', 'master', 'worker'];
   const migrated = boot({ map: new Map([[KEY, JSON.stringify(s)]]) }).m;
-  assert.equal(migrated.corrupt, false); assert.equal(migrated.state().version, 6);
+  assert.equal(migrated.corrupt, false); assert.equal(migrated.state().version, 8);
   assert.equal(migrated.state().balance, 4321); assert.equal(migrated.state().totalSpent, 7000);
   assert.equal(migrated.state().earnedTotal, 200000); assert.equal(migrated.workRate(), 50);
   assert.equal(Object.values(migrated.state().earnedByPlan).reduce((a, v) => a + v, 0), 0);
@@ -221,4 +249,46 @@ test('saved nine-product milestone remains valid while locked, and old full comp
   assert.equal(old.corrupt, false); assert.equal(old.specialUnlocked(), true);
   assert.equal(old.honorProgress().total, 9); assert.equal(old.collectionProgress().total, 10);
   assert.equal(old.state().completion.totalSpent, 91000);
+});
+
+test('rare black envelope persists through reload and sealing, pays 500 once and rolls the next envelope only on completion', () => {
+  const rare = { getRandomValues: array => array.fill(0) };
+  const b = boot({ rng: rare });
+  const first = cycle(b);
+  assert.equal(first.peel.amount, 10); assert.equal(first.peel.nextEnvelope, 'black');
+  const q = boot({ map: b.map, now: Date.now() + 2000 });
+  assert.equal(q.m.state().workEnvelope, 'black'); assert.equal(q.m.workReward(), 500);
+  assert.equal(q.m.workStep('seal').amount, 0);
+  const next = boot({ map: b.map, now: Date.now() + 4000 });
+  assert.equal(next.m.state().workEnvelope, 'black'); assert.equal(next.m.state().workPhase, 'peel');
+  const result = next.m.workStep('peel');
+  assert.equal(result.envelope, 'black'); assert.equal(result.amount, 500); assert.equal(result.nextEnvelope, 'normal');
+  assert.equal(next.m.state().balance, 510); assert.equal(next.m.state().earnedTotal, 510);
+  assert.throws(() => next.m.workStep('peel')); assert.equal(next.m.state().balance, 510);
+});
+
+test('black rewards apply at every rank and contribute only to the rank active when peeled', () => {
+  for (const planId of ['ordinary', 'gold', 'black']) {
+    const b = boot(); own(b); fund(b, 20000); b.m.join(planId);
+    const s = b.m.state(); s.workEnvelope = 'black'; b.map.set(KEY, JSON.stringify(s));
+    assert.equal(cycle(b).peel.amount, 500);
+    assert.equal(b.m.state().earnedByPlan[planId], 500);
+    assert.equal(b.m.state().workCount, 1);
+  }
+  for (const [random, expected] of [[42949672, 'black'], [42949673, 'normal']]) {
+    const b = boot({ rng: { getRandomValues: array => array.fill(random) } });
+    assert.equal(cycle(b).peel.nextEnvelope, expected);
+  }
+});
+
+test('v6 migration retains in-progress work and existing income; invalid envelope kinds remain protected', () => {
+  const s = boot().m.state(); s.version = 6; delete s.workEnvelope;
+  s.balance = 123; s.workPhase = 'peel'; s.earnedByPlan.gold = 500; s.earnedTotal = 500;
+  const map = new Map([[KEY, JSON.stringify(s)]]), b = boot({ map });
+  assert.equal(b.m.corrupt, false); assert.equal(b.m.state().workEnvelope, 'normal');
+  assert.equal(b.m.state().workPhase, 'peel'); assert.equal(b.m.state().earnedByPlan.gold, 500);
+  assert.equal(b.m.state().balance, 123);
+  const bad = b.m.state(); bad.workEnvelope = 'unknown'; const raw = JSON.stringify(bad);
+  const badMap = new Map([[KEY, raw]]), invalid = boot({ map: badMap });
+  assert.equal(invalid.m.corrupt, true); assert.equal(badMap.get(KEY), raw);
 });

@@ -10,7 +10,7 @@ function boot() {
     if (!nodes.has(id)) nodes.set(id, { innerHTML: '', addEventListener() {}, querySelector: () => node('close'), showModal() {}, close() {} });
     return nodes.get(id);
   };
-  const context = vm.createContext({ window, CustomEvent, Date, structuredClone, crypto: require('node:crypto').webcrypto,
+  const context = vm.createContext({ window, CustomEvent, Date, structuredClone, crypto: require('./helpers/normal-crypto.cjs'),
     document: { getElementById: node, addEventListener: (t, fn) => { events[t] = fn; }, body: { classList: { add() {}, remove() {} } } },
     localStorage: { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) }
   });
@@ -68,7 +68,7 @@ test('collection starts out of nine and both denominators expand only at the joi
   assert.equal(b.m.honorProgress(s).total, 9);
   assert.equal(b.m.collectionProgress(s).total, 10);
 });
-test('membership UI shows dues, disables insufficient confirmation and quotes upgrade differences', () => {
+test('membership UI shows dues, disables insufficient confirmation and quotes full upgrade fees', () => {
   const b = boot(); b.m.badgeHTML = () => ''; b.m.toast = () => {};
   vm.runInContext(read('js/membership.js'), b.context);
   const buttonClass = id => b.node('plans').innerHTML.match(new RegExp(`<button class="([^"]+)" data-join="${id}"`))[1];
@@ -97,8 +97,15 @@ test('membership UI shows dues, disables insufficient confirmation and quotes up
   assert.match(buttonClass('gold'), /\bgold\b/);
   assert.doesNotMatch(b.node('member-dialog-content').innerHTML, /id="confirm-membership" disabled/);
   assert.match(b.node('member-dialog-content').innerHTML, /class="button gold full" id="confirm-membership"/);
-  assert.match(b.node('member-dialog-content').innerHTML, /今回の架空会費：¥3,000/);
+  assert.match(b.node('member-dialog-content').innerHTML, /今回の架空会費：¥5,000/);
   b.node('confirm-membership').onclick();
-  assert.equal(b.m.state().balance, 5000);
+  assert.equal(b.m.state().balance, 3000);
   assert.equal(b.m.memberPlan().id, 'gold');
+  b.m.leave(); click('gold');
+  assert.match(b.node('plans').innerHTML, /再入会 ¥0/);
+  assert.match(b.node('plans').innerHTML, /0円で再入会する/);
+  assert.match(b.node('member-dialog-content').innerHTML, /今回のお支払い ¥0/);
+  assert.match(b.node('member-dialog-content').innerHTML, /再入会無料/);
+  b.node('confirm-membership').onclick();
+  assert.equal(b.m.state().balance, 3000);
 });

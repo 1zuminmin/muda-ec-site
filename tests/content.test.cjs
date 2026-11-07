@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const pages = fs.readdirSync(root).filter(f => f.endsWith('.html'));
 const map = new Map(), window = new EventTarget();
-const context = vm.createContext({ window, CustomEvent, structuredClone, crypto: require('node:crypto').webcrypto, Date, localStorage: { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) } });
+const context = vm.createContext({ window, CustomEvent, structuredClone, crypto: require('./helpers/normal-crypto.cjs'), Date, localStorage: { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) } });
 vm.runInContext(read('js/storage.js'), context);
 vm.runInContext(read('js/reviews.js'), context);
 const M = window.Muda;

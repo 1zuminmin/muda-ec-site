@@ -29,8 +29,12 @@
 <div class="pointless-work-grid">
 <article class="earning-card work-card">
 <div class="work-title-row"><div><p class="eyebrow">THE ENVELOPE DEPARTMENT</p><h2>封筒復元係。</h2></div><span class="phase-label" id="work-phase">01 / SEAL</span></div>
-<p class="earning-lead" id="work-instruction">糊を塗って、封をしてください。</p>
-<p class="subtle" id="gesture-hint">封筒に指を置き、右へなぞってください。</p>
+<div class="work-instruction-stack" id="work-instruction" data-phase="seal">
+<div class="work-instruction-copy" id="work-copy-seal"><p class="earning-lead">右へなぞって、封を閉じてください。</p><p class="subtle">封筒に指を置き、右へなぞってから離します。</p></div>
+<div class="work-instruction-copy" id="work-copy-peel" aria-hidden="true"><p class="earning-lead">上へ引き上げて、封を剥がしてください。</p><p class="subtle">封筒に指を置き、上へ引き上げてから離します。</p></div>
+</div>
+<p class="sr-only" id="gesture-hint">右へなぞって糊付けし、上へ引き上げて開封します。</p>
+<p class="work-envelope-kind" id="work-envelope-kind">通常の封筒</p>
 <div class="work-sound-row"><span>小さな紙の音とともに。</span><button class="sound-toggle" id="paper-sound-toggle" type="button" aria-pressed="true">効果音 ON</button></div>
 <div class="envelope-table">
 <div class="work-envelope" id="envelope-action" data-phase="seal" tabindex="0" role="group" aria-label="封筒の作業台。右へなぞって糊付け、上へ引き上げて開封" aria-describedby="gesture-hint keyboard-work-help">
@@ -45,7 +49,7 @@
 </article>
 <aside class="work-guide">
 <div class="rate-card"><p class="eyebrow">YOUR RATE FOR A ROUND TRIP</p><p class="rate-plan" id="work-plan">未入会</p><p class="current-rate"><strong id="work-rate">¥10</strong><span>架空 / 1往復</span></p><p>糊で閉じて、剥がして、元どおり。<br>完了時の会員ランクで単価が決まります。</p><a class="button outline full" href="membership.html">会員ランクを変更する ↗</a></div>
-<div class="work-manual"><p class="eyebrow">AN ENTIRELY POINTLESS PROCEDURE</p><h3>まじめな作業手順</h3><ol><li><strong>糊を塗って、閉じる。</strong><span>封筒に指を置き、右へなぞってから離します。</span></li><li><strong>剥がして、開ける。</strong><span>封筒に指を置き、上へ引き上げてから離します。</span></li><li><strong>何も変わらない。報酬だけ増える。</strong><span>同じ封筒で、何度でも繰り返せます。</span></li></ol><p class="fine">新しく始める場合の所持金は0円です。会員になると内職の単価が上がります。会費は架空の所持金から支払います。</p></div>
+<div class="work-manual"><p class="eyebrow">AN ENTIRELY POINTLESS PROCEDURE</p><h3>まじめな作業手順</h3><ol><li><strong>糊を塗って、閉じる。</strong><span>封筒に指を置き、右へなぞってから離します。</span></li><li><strong>剥がして、開ける。</strong><span>封筒に指を置き、上へ引き上げてから離します。</span></li><li><strong>何も変わらない。報酬だけ増える。</strong><span>同じ封筒で、何度でも繰り返せます。</span></li></ol><p class="fine">1往復を終えるごとに、次の封筒が1％の確率で黒封筒になります。黒封筒はどのランクでも1通500円です。報酬は完了時の会員別実績にも加算します。すべて架空の報酬です。</p><p class="fine">新しく始める場合の所持金は0円です。会員になると内職の単価が上がります。会費は架空の所持金から支払います。</p></div>
 </aside>
 </div>
 </section>

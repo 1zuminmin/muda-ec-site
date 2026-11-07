@@ -19,6 +19,8 @@
     document.getElementById('profile-work-rate').textContent = M.money(M.workRate(s));
     document.getElementById('profile-collection').textContent = `${M.collectionProgress(s).count} / ${M.collectionProgress(s).total}種類`;
     document.getElementById('save-latest-certificate').hidden = !latest;
+    document.getElementById('open-latest-certificate').hidden = !latest;
+    if (latest) document.getElementById('open-latest-certificate').href = 'certificate.html?purchase=' + encodeURIComponent(latest.id);
     document.getElementById('certificate-availability').textContent = latest ? '保存済みのお名前で、最新の購入認定証を再発行できます。完全クリア後は、ページ下部で感謝状も保存できます。' : '商品を購入すると、お名前入りの認定証を保存できます。';
     if (!draftDirty) { input.value = s.profile.name; preview(); }
   }
@@ -35,7 +37,7 @@
   document.getElementById('save-latest-certificate').addEventListener('click', async e => {
     const purchase = M.state().history.at(-1); if (!purchase) return;
     const button = e.currentTarget; button.disabled = true;
-    try { await M.downloadCertificate(purchase); M.toast('お名前入りの認定証を保存しました。'); }
+    try { await M.downloadCertificate(purchase); M.toast('認定証PNGの保存を開始しました。保存できない場合は画像を開いてください。'); }
     catch (error) { M.toast('認定証を保存できませんでした。', error.message); }
     finally { button.disabled = false; }
   });
