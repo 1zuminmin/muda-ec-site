@@ -146,7 +146,7 @@ git push -u origin codex/your-change
 
 ## 無料ホスティング（Cloudflare Pages）
 
-公開先は https://iminai-shokai.pages.dev/ です。Cloudflare PagesでGitHubリポジトリを連携し、本番ブランチ `codex/muda-shop-initial`、フレームワーク `None`、ビルドコマンド `exit 0`、出力先 `.` で配信します。本番ブランチへのpush後にCloudflare側のデプロイ成功を確認してください。詳細は [公開手順書](docs/CLOUDFLARE-PAGES.md) を参照してください。旧GitHub Pagesの停止は別途設定が必要です。
+公開先は https://iminai-shokai.pages.dev/ です。Cloudflare PagesでGitHubリポジトリを連携し、本番ブランチ `codex/muda-shop-initial`、フレームワーク `None`、ビルドコマンド `exit 0`、出力先 `.` で配信します。本番ブランチへのpush後にCloudflare側のデプロイ成功を確認してください。詳細は [公開手順書](docs/CLOUDFLARE-PAGES.md) を参照してください。旧GitHub Pagesは2026年11月7日に公開設定を解除し、旧URLのHTTP 404を確認済みです。GitHubリポジトリは引き続きソース管理に利用します。
 
 ## 次に追加できること
 
