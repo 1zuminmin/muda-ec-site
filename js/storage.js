@@ -18,11 +18,11 @@
   const achievements = Object.freeze([
     { id: 'first', name: '初めての後悔', description: '初めて商品を購入する', target: 1, type: 'count', symbol: 'Ⅰ' },
     { id: 'planned', name: '計画的な浪費', description: '累計500円を無駄にする', target: 500, type: 'spent', symbol: 'Ⅱ' },
-    { id: 'red-worker', name: '正会員の徒労', description: 'RED会員として内職で10,000円を稼ぐ（500往復分）', target: 10000, type: 'member-earned', planId: 'ordinary', symbol: 'Ⅲ' },
-    { id: 'gold-worker', name: '特別会員の徒労', description: 'GOLD会員として内職で25,000円を稼ぐ（500往復分）', target: 25000, type: 'member-earned', planId: 'gold', symbol: 'Ⅳ' },
+    { id: 'red-worker', name: '正会員の徒労', description: 'RED会員として内職で10,000円を稼ぐ（1周目単価500往復相当）', target: 10000, type: 'member-earned', planId: 'ordinary', symbol: 'Ⅲ' },
+    { id: 'gold-worker', name: '特別会員の徒労', description: 'GOLD会員として内職で25,000円を稼ぐ（1周目単価500往復相当）', target: 25000, type: 'member-earned', planId: 'gold', symbol: 'Ⅳ' },
     { id: 'collection', name: '完全なる虚無', description: '異なる3種類の商品を購入する', target: 3, type: 'unique', symbol: 'Ⅴ' },
     { id: 'ultimate', name: '無駄遣いの極致', description: '累計10,000円を無駄にする', target: 10000, type: 'spent', symbol: 'Ⅵ' },
-    { id: 'black-worker', name: '名誉会員の徒労', description: 'BLACK会員として内職で50,000円を稼ぐ（500往復分）', target: 50000, type: 'member-earned', planId: 'black', symbol: 'Ⅶ' },
+    { id: 'black-worker', name: '名誉会員の徒労', description: 'BLACK会員として内職で50,000円を稼ぐ（1周目単価500往復相当）', target: 50000, type: 'member-earned', planId: 'black', symbol: 'Ⅶ' },
     { id: 'regular', name: 'お得意様', description: '通常9種類の商品を購入する', target: regularProducts.length, type: 'regular', symbol: 'Ⅷ' },
     { id: 'complete', name: '真の無駄使いyer', description: '特別なご案内を含む全10種類を購入する', target: products.length, type: 'unique', symbol: 'Ⅸ' }
   ]);
@@ -31,7 +31,7 @@
     { id: 'gold', name: '特別会員', english: 'GOLD', tagline: '無意味を、たしなむ方へ。', rate: 50, fee: 5000, requiredProducts: 2, rank: 'Ⅱ', badge: 'insignia-2.svg', badgeDescription: '竹葉と二段の山形を持つ盾章', level: 2 },
     { id: 'black', name: '名誉会員', english: 'BLACK', tagline: '徒労にも、最高の待遇を。', rate: 100, fee: 10000, requiredProducts: 3, rank: 'Ⅲ', badge: 'insignia-3.svg', badgeDescription: '松葉と三段の山形、月桂樹を持つ盾章', level: 3 }
   ]);
-  const initial = () => ({ version: 8, paidPlans: [], workEnvelope: 'normal', earnedByPlan: { ordinary: 0, gold: 0, black: 0 }, membershipCredit: 0, membershipSpent: 0, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
+  const initial = () => ({ version: 9, lap: 1, lapCrest: false, sortingPhase: 'align', sortingRemainder: 0, sortingCount: 0, paidPlans: [], workEnvelope: 'normal', earnedByPlan: { ordinary: 0, gold: 0, black: 0 }, membershipCredit: 0, membershipSpent: 0, balance: 0, history: [], totalSpent: 0, unlocked: [], lastUsed: new Date().toISOString(), workCount: 0, workLastAt: 0, workPhase: 'seal', earnedTotal: 0, membership: null, profile: { name: '' }, standardCompletion: null, completion: null });
   const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja', { granularity: 'grapheme' }) : null;
   const nameLength = name => segmenter ? Array.from(segmenter.segment(name)).length : Array.from(name).length;
   function normalizeName(value) {
@@ -51,13 +51,15 @@
   const specialUnlocked = s => isComplete(s) || (allRegularPurchased(s) && achievements.filter(a => a.id !== 'complete').every(a => valueFor(a, s) >= a.target));
   const isComplete = s => products.every(p => owned(s).has(p.id));
   const valueFor = (a, s) => a.type === 'count' ? s.history.length : a.type === 'unique' ? owned(s).size : a.type === 'regular' ? regularCount(s) : a.type === 'member-earned' ? (s.earnedByPlan?.[a.planId] || 0) : a.type === 'earned' ? s.earnedTotal : s.totalSpent;
-  const workRate = s => plans.find(p => p.id === s.membership?.planId)?.rate ?? 10;
+  const workRate = s => (plans.find(p => p.id === s.membership?.planId)?.rate ?? 10) * (s.lap === 2 ? 1.5 : 1);
+  const sortingUnits = s => workRate(s) * 99 + 500;
+  const sortingReward = s => Math.floor((sortingUnits(s) + s.sortingRemainder) / 100);
   let fallback = initial(), available = true, corrupt = false;
   const integer = n => Number.isSafeInteger(n) && n >= 0;
   const dateValid = d => typeof d === 'string' && Number.isFinite(Date.parse(d));
   const snapshotValid = r => r && dateValid(r.date) && integer(r.totalSpent) && integer(r.count);
   function baseValid(s) {
-    return s && [1, 2, 3, 4, 5, 6, 7, 8].includes(s.version) && integer(s.balance) && integer(s.totalSpent) && Array.isArray(s.history) && s.history.every(p => products.some(a => a.id === p.productId && (a.price === p.price || a.legacyPrice === p.price)) && typeof p.id === 'string' && /^[A-Za-z0-9-]+$/.test(p.id) && dateValid(p.date)) && s.history.reduce((sum, p) => sum + p.price, 0) === s.totalSpent && Array.isArray(s.unlocked) && s.unlocked.every(id => achievements.some(a => a.id === id) || (s.version < 6 && ['return', 'master', 'worker'].includes(id))) && dateValid(s.lastUsed);
+    return s && [1, 2, 3, 4, 5, 6, 7, 8, 9].includes(s.version) && integer(s.balance) && integer(s.totalSpent) && Array.isArray(s.history) && s.history.every(p => products.some(a => a.id === p.productId && (a.price === p.price || a.legacyPrice === p.price)) && typeof p.id === 'string' && /^[A-Za-z0-9-]+$/.test(p.id) && dateValid(p.date)) && s.history.reduce((sum, p) => sum + p.price, 0) === s.totalSpent && Array.isArray(s.unlocked) && s.unlocked.every(id => achievements.some(a => a.id === id) || (s.version < 6 && ['return', 'master', 'worker'].includes(id))) && dateValid(s.lastUsed);
   }
   // Only used to safely retire an in-progress result from the previous release.
   function oldRoundValid(r) {
@@ -65,6 +67,7 @@
   }
   function valid(s) {
     if (!baseValid(s)) return false;
+    if (s.version >= 9 && (![1, 2].includes(s.lap) || s.lapCrest !== (s.lap === 2) || !['align', 'scatter'].includes(s.sortingPhase) || !integer(s.sortingRemainder) || s.sortingRemainder >= 100 || !integer(s.sortingCount) || s.sortingCount > s.workCount)) return false;
     if (s.version === 1) return true;
     if (!integer(s.workCount) || !integer(s.workLastAt) || !integer(s.earnedTotal) || !(s.membership === null || (plans.some(p => p.id === s.membership.planId) && dateValid(s.membership.since)))) return false;
     if (s.version === 2) return s.earnedTotal === s.workCount * 10 && Array.isArray(s.rounds) && (s.pendingRound === null || oldRoundValid(s.pendingRound)) && (s.completion === null || snapshotValid(s.completion));
@@ -89,6 +92,10 @@
     return next;
   }
   function migrate(s) {
+    if (s.version === 9) return s;
+    return { ...migrateToEight(s), version: 9, lap: 1, lapCrest: false, sortingPhase: 'align', sortingRemainder: 0, sortingCount: 0 };
+  }
+  function migrateToEight(s) {
     if (s.version === 8) return s;
     const priorPlans = prior => plans.filter(p => p.fee <= prior.membershipCredit).map(p => p.id);
     if (s.version >= 6) return { ...s, version: 8, workEnvelope: s.workEnvelope || 'normal', paidPlans: priorPlans(s) };
@@ -161,6 +168,30 @@
     visibleProducts: (s = state()) => products.filter(p => !p.secret || specialUnlocked(s)),
     canView: (productId, s = state()) => products.some(p => p.id === productId && (!p.secret || specialUnlocked(s))),
     workRate: (s = state()) => workRate(s),
+    sortingReward: (s = state()) => sortingReward(s),
+    canSort: (s = state()) => s.membership?.planId === 'black',
+    startSecondLap() {
+      const s = state();
+      if (s.lap !== 1 || !s.completion || !isComplete(s)) throw new Error('1周目の完全クリア後に、2周目へ進めます。');
+      return save({ ...initial(), lap: 2, lapCrest: true });
+    },
+    sortingStep(action) {
+      const s = state(), now = Date.now(), wasInvited = specialUnlocked(s);
+      if (s.membership?.planId !== 'black') throw new Error('封筒整列係は、現在BLACK会員の方だけのお仕事です。');
+      if (!['align', 'scatter'].includes(action) || s.sortingPhase !== action) throw new Error('いまの作業手順をご確認ください。');
+      if (now - s.workLastAt < 180) return null;
+      let amount = 0;
+      if (action === 'align') s.sortingPhase = 'scatter';
+      else {
+        amount = sortingReward(s);
+        if (![s.balance + amount, s.earnedTotal + amount, s.earnedByPlan.black + amount, s.workCount + 1, s.sortingCount + 1].every(integer)) throw new Error('保存できる金額の上限に達しました。');
+        s.sortingRemainder = (sortingUnits(s) + s.sortingRemainder) % 100;
+        s.balance += amount; s.earnedTotal += amount; s.earnedByPlan.black += amount;
+        s.workCount++; s.sortingCount++; s.sortingPhase = 'align';
+      }
+      s.workLastAt = now; const newly = unlock(s); save(s);
+      return { amount, phase: s.sortingPhase, newly, invitationNow: !wasInvited && specialUnlocked(s) };
+    },
     workReward: (s = state()) => s.workEnvelope === 'black' ? 500 : workRate(s),
     money: n => '¥' + n.toLocaleString('ja-JP'),
     get persistent() { return available; },

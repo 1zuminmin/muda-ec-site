@@ -49,7 +49,7 @@
   document.getElementById('purchase-history')?.addEventListener('click', e => { const button = e.target.closest('[data-certificate]'); if (button) { const p = M.state().history.find(p => p.id === button.dataset.certificate); if (p) download(p); } });
   function manage(type) {
     const deleting = type === 'delete';
-    content.innerHTML = `<p class="eyebrow">YOUR ACCOUNT</p><h2 id="dialog-title">${deleting ? 'すべての記録を削除しますか。' : '所持金をリセットしますか。'}</h2><p class="success-message">${deleting ? '購入履歴・累計額・内職・実績・会員状態・登録名・感謝状をすべて削除し、所持金を0円に戻します。この操作は取り消せません。' : '所持金を0円に戻します。購入・内職・実績・会員・感謝状の記録はそのまま残ります。'}</p><button class="button ${deleting ? 'danger' : 'gold'} full" id="confirm-management">${deleting ? 'すべての記録を削除する' : '所持金を0円に戻す'}</button><button class="cancel-button" id="cancel-management" autofocus>キャンセル</button>`;
+    content.innerHTML = `<p class="eyebrow">YOUR ACCOUNT</p><h2 id="dialog-title">${deleting ? 'すべての記録を削除しますか。' : '所持金をリセットしますか。'}</h2><p class="success-message">${deleting ? '購入履歴・累計額・内職・実績・会員状態・登録名・感謝状・周回記録と紋章をすべて削除し、1周目の所持金0円に戻します。この操作は取り消せません。' : '所持金を0円に戻します。購入・内職・実績・会員・感謝状の記録はそのまま残ります。'}</p><button class="button ${deleting ? 'danger' : 'gold'} full" id="confirm-management">${deleting ? 'すべての記録を削除する' : '所持金を0円に戻す'}</button><button class="cancel-button" id="cancel-management" autofocus>キャンセル</button>`;
     open(); document.getElementById('cancel-management').onclick = close;
     document.getElementById('confirm-management').onclick = () => { deleting ? M.clear() : M.resetBalance(); close(); M.toast(deleting ? 'すべての記録を削除しました。' : '架空の所持金を0円に戻しました。'); };
   }

@@ -36,3 +36,11 @@ test('unsupported or blocked audio remains silent without throwing, and backgrou
   const blocked = harness({ resumeFails: true }); blocked.sound.finish('peel'); await flush(); assert.equal(blocked.stats.starts, 0);
   const h = harness(); h.sound.finish('peel'); await flush(); h.document.hidden = true; h.events.visibilitychange(); assert.ok(h.stats.stops.includes(undefined));
 });
+
+
+test('black-envelope bell has a longer low-amplitude decay and obeys mute and page visibility',async()=>{
+  const h=harness(); h.sound.rare(); await flush(); assert.equal(h.stats.starts,1);
+  const data=h.stats.buffers[0]; assert.equal(data.length,6800); assert.ok(data.some(n=>n!==0)); assert.ok(data.every(n=>Math.abs(n)<.8));
+  h.sound.setEnabled(false); h.sound.rare(); await flush(); assert.equal(h.stats.starts,1);
+  h.sound.setEnabled(true); h.document.hidden=true; h.sound.rare(); await flush(); assert.equal(h.stats.starts,1);
+});

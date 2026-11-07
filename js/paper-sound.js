@@ -19,12 +19,18 @@
   }
   function bufferFor(type) {
     if (buffers.has(type)) return buffers.get(type);
-    const length = type === 'peel' ? 0.32 : 0.14;
+    const length = type === 'rare' ? 0.85 : type === 'peel' ? 0.32 : 0.14;
     const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * length), context.sampleRate);
     const data = buffer.getChannelData(0);
     let smooth = 0;
     for (let i = 0; i < data.length; i++) {
       const t = i / context.sampleRate, position = i / data.length;
+      if (type === 'rare') {
+        // A subdued low bell, with a soft attack and slowly fading overtones.
+        const attack = Math.min(1, t / .035), decay = Math.exp(-t * 5);
+        data[i] = attack * decay * (Math.sin(t * Math.PI * 2 * 110) * .48 + Math.sin(t * Math.PI * 2 * 220.4) * .2 + Math.sin(t * Math.PI * 2 * 331) * .08);
+        continue;
+      }
       const noise = Math.random() * 2 - 1;
       smooth = smooth * 0.72 + noise * 0.28;
       // Rub: a soft, continuous grain. Peel: several brief irregular crackles.
@@ -39,7 +45,7 @@
     try {
       const source = audio.createBufferSource(), filter = audio.createBiquadFilter(), gain = audio.createGain();
       source.buffer = bufferFor(type);
-      filter.type = 'bandpass'; filter.frequency.value = type === 'peel' ? 2400 : 1300; filter.Q.value = 0.55;
+      filter.type = type === 'rare' ? 'lowpass' : 'bandpass'; filter.frequency.value = type === 'rare' ? 1200 : type === 'peel' ? 2400 : 1300; filter.Q.value = 0.55;
       const start = audio.currentTime, duration = source.buffer.duration;
       gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(0.8, start + 0.008); gain.gain.linearRampToValueAtTime(0, start + duration);
       source.connect(filter); filter.connect(gain); gain.connect(master); voices.add(source);
@@ -52,6 +58,7 @@
     get enabled() { return enabled; },
     get supported() { return !!AudioContextClass; },
     unlock,
+    rare() { void play('rare'); },
     rub() { if (!enabled || Date.now() - lastRub < 115) return; lastRub = Date.now(); void play('rub'); },
     finish(type) { void play(type === 'peel' ? 'peel' : 'rub'); },
     setEnabled(value) {

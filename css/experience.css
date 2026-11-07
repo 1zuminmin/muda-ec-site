@@ -398,3 +398,29 @@
   .header-profile-copy > span { font-size: 8px; }
   .header-profile-copy strong { max-width: 48px; }
 }
+
+/* A second, equally pointless department. The work area keeps a fixed footprint. */
+.job-selector { display:flex; gap:12px; flex-wrap:wrap; margin:22px 0 12px; }
+.work-instruction-stack[data-phase="align"] #work-copy-align,
+.work-instruction-stack[data-phase="scatter"] #work-copy-scatter { visibility:visible; }
+.sorting-paper { display:none; position:absolute; width:100%; height:calc(100% - 20px); top:20px; background:#d9ccaf; border:1px solid #ad9c7b; box-shadow:0 8px 16px #0003; pointer-events:none; }
+.work-envelope[data-job="sort"] .sorting-paper { display:block; }
+.work-envelope[data-job="sort"] .work-flap,
+.work-envelope[data-job="sort"] .glue-track,
+.work-envelope[data-job="sort"] .envelope-seal { display:none; }
+.work-envelope[data-job="sort"] .sorting-paper-back { transform:translate(calc(-30px * (1 - var(--gesture-progress))), calc(-15px * (1 - var(--gesture-progress)))) rotate(calc(-12deg * (1 - var(--gesture-progress)))); }
+.work-envelope[data-job="sort"] .sorting-paper-front { transform:translate(calc(30px * (1 - var(--gesture-progress))), calc(18px * (1 - var(--gesture-progress)))) rotate(calc(10deg * (1 - var(--gesture-progress)))); }
+.work-envelope[data-phase="scatter"] .sorting-paper-back { transform:translate(calc(-30px * var(--gesture-progress)), calc(-15px * var(--gesture-progress))) rotate(calc(-12deg * var(--gesture-progress))); }
+.work-envelope[data-phase="scatter"] .sorting-paper-front { transform:translate(calc(30px * var(--gesture-progress)), calc(18px * var(--gesture-progress))) rotate(calc(10deg * var(--gesture-progress))); }
+.lap-crest { width:28px; height:32px; vertical-align:middle; flex-shrink:0; }
+.lap-panel, .reset-panel { padding:28px; border:1px solid var(--line); margin-top:28px; background:#14222e; }
+.lap-panel h2, .reset-panel h2 { margin:12px 0; }
+.lap-panel p, .reset-panel p { margin-bottom:16px; }
+.record-dialog { width:min(570px,calc(100% - 32px)); max-height:85vh; overflow:auto; padding:32px; background:#14222e; color:var(--paper); border:1px solid var(--gold); }
+.record-dialog::backdrop { background:#050b12d9; }
+.record-dialog h2 { margin:12px 0 20px; }
+.record-dialog p { margin:16px 0; line-height:1.9; }
+.record-dialog label { display:flex; gap:12px; margin:22px 0; align-items:start; }
+.record-dialog input { width:20px; height:20px; flex-shrink:0; margin-top:3px; }
+
+@media (max-width: 480px) { .header-profile .lap-crest { width:20px; height:26px; } .record-dialog { padding:22px; } }

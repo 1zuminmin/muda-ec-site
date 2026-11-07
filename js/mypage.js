@@ -13,7 +13,7 @@
     const s = M.state(), plan = M.memberPlan(s), latest = s.history.at(-1);
     document.getElementById('profile-display-name').textContent = M.recipientName(s);
     document.getElementById('profile-rank').textContent = plan ? `${plan.english} / ${plan.name}` : '未入会';
-    document.getElementById('profile-insignia').innerHTML = M.badgeHTML(plan);
+    document.getElementById('profile-insignia').innerHTML = M.badgeHTML(plan) + (s.lapCrest ? '<img class="lap-crest" src="assets/images/lap-crest.svg" alt="第二期・徒労の継承の紋章">' : '');
     document.getElementById('profile-insignia-description').textContent = plan?.badgeDescription || '山形のない盾章';
     document.getElementById('profile-spent').textContent = M.money(s.totalSpent);
     document.getElementById('profile-work-rate').textContent = M.money(M.workRate(s));

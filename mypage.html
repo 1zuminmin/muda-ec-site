@@ -13,6 +13,7 @@
 <script defer src="js/main.js"></script>
 <script defer src="js/certificate.js"></script>
 <script defer src="js/mypage.js"></script>
+<script defer src="js/records.js"></script>
 </head>
 <body data-page="mypage">
 <a class="skip" href="#main">本文へ移動</a>
@@ -51,6 +52,9 @@
 </div>
 </div>
 <div id="collection-status"></div>
+<section class="lap-panel" aria-labelledby="lap-title"><p class="eyebrow">THE INHERITANCE OF FUTILITY</p><h2 id="lap-title">徒労の継承</h2><p id="lap-status" role="status"></p><p>2周目は所持金0円・未入会から。通常報酬は1.5倍になり、重なる封筒の周回紋章が残ります。黒封筒は500円のままです。初版は2周目までお楽しみいただけます。</p><button class="button gold" id="start-second-lap" type="button" disabled>記録を清算して、2周目へ</button></section>
+<section class="reset-panel" aria-labelledby="reset-title"><p class="eyebrow">A COMPLETELY FRESH START</p><h2 id="reset-title">すべて忘れて、最初から。</h2><p>完全クリアや周回に関係なく利用できます。所持金・商品・実績・会員・お名前・感謝状に加え、2周目の記録と紋章も削除し、1周目の0円から再開します。</p><button class="button outline" id="reset-all-records" type="button">すべての記録をリセット</button></section>
+<dialog class="record-dialog" id="record-dialog" aria-labelledby="record-dialog-title"><p class="eyebrow">PLEASE REVIEW YOUR RECORDS</p><h2 id="record-dialog-title"></h2><p id="record-dialog-description"></p><p id="record-dialog-retained"></p><a class="text-link" id="record-certificate" href="certificate.html?complete=1" target="_blank" rel="noopener">削除前に感謝状の画像を開く ↗</a><label><input type="checkbox" id="record-acknowledge">この操作は取り消せず、保存していない認定証・感謝状も再発行できなくなることを確認しました。</label><div class="inline-actions"><button class="button outline" id="record-cancel" type="button" autofocus>キャンセル</button><button class="button danger" id="record-confirm" type="button" disabled>実行する</button></div><p class="fine" id="record-error" role="alert"></p></dialog>
 </section>
 </main>
 <div id="site-footer"></div><div id="toast-region" aria-live="polite"></div>

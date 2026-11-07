@@ -29,7 +29,7 @@ function harness() {
   window.Muda.toast = () => {}; window.Muda.notifyAchievements = () => {};
   window.Muda.paperSound = { enabled: true, supported: true, unlock() {}, rub() { sounds.push('rub'); }, finish(type) { sounds.push(type); }, setEnabled(value) { this.enabled = value; } };
   vm.runInContext(fs.readFileSync(path.join(root, 'js/earn.js'), 'utf8'), context);
-  return { m: window.Muda, nodes, sounds, document, documentEvents, envelope: nodes.get('envelope-action'), advance(ms = 200) { now += ms; [...timers.values()].forEach(fn => fn()); } };
+  return { m: window.Muda, nodes, sounds, map, document, documentEvents, envelope: nodes.get('envelope-action'), advance(ms = 200) { now += ms; [...timers.values()].forEach(fn => fn()); } };
 }
 function drag(h, end, type = 'pointerup') { h.envelope.fire('pointerdown'); h.envelope.fire('pointermove', end); h.envelope.fire(type, end); h.envelope.fire('click'); }
 test('click, tap, Enter and Space cannot seal or peel the envelope', () => {
@@ -69,4 +69,18 @@ test('keyboard requires a sustained directional hold and release; blur cancels i
 test('hiding the page cancels active gestures and sound toggle changes only sound', () => {
   const h = harness(); h.nodes.get('paper-sound-toggle').fire('click'); assert.equal(h.m.paperSound.enabled, false); assert.equal(h.m.state().balance, 0);
   h.envelope.fire('pointerdown'); h.envelope.fire('pointermove', { clientX: 120 }); h.document.hidden = true; h.documentEvents.visibilitychange(); h.envelope.fire('pointerup', { clientX: 120 }); assert.equal(h.m.state().workPhase, 'seal');
+});
+
+
+test('BLACK sorting uses right/up gestures, preserves both jobs and rejects clicks and short swipes',()=>{
+  const h=harness(), key='muda-shokai:v1', s=h.m.state();
+  s.history=h.m.products.slice(0,3).map((p,i)=>({id:'IS-TEST-'+i,productId:p.id,price:p.price,date:s.lastUsed})); s.totalSpent=s.history.reduce((n,p)=>n+p.price,0); s.balance=20000;
+  h.map.set(key,JSON.stringify(s)); h.m.join('black');
+  h.nodes.get('job-sort').fire('click'); assert.equal(h.envelope.dataset.job,'sort'); assert.equal(h.envelope.dataset.phase,'align');
+  h.envelope.fire('click'); drag(h,{clientX:30}); assert.equal(h.m.state().sortingPhase,'align');
+  drag(h,{clientX:120}); h.advance(); assert.equal(h.m.state().sortingPhase,'scatter'); assert.equal(h.envelope.dataset.phase,'scatter');
+  h.nodes.get('job-restore').fire('click'); drag(h,{clientX:120}); h.advance(); assert.equal(h.m.state().workPhase,'peel');
+  h.nodes.get('job-sort').fire('click'); assert.equal(h.envelope.dataset.phase,'scatter'); drag(h,{clientY:-70});
+  assert.equal(h.m.state().earnedTotal,104); assert.equal(h.m.state().workPhase,'peel'); assert.equal(h.envelope.dataset.kind,'normal');
+  h.m.leave(); assert.equal(h.envelope.dataset.job,'restore'); assert.equal(h.nodes.get('job-sort').disabled,true);
 });

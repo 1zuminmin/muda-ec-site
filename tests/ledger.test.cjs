@@ -27,7 +27,7 @@ function collectRegular(b) { fund(b, 300000); let last; for (const p of b.m.regu
 
 function fund(b, balance) { const s = b.m.state(); s.balance = balance; b.map.set(KEY, JSON.stringify(s)); }
 test('new game starts at zero with eight regular honors and nine visible products', () => {
- const {m}=boot(); assert.equal(m.state().version,8); assert.equal(m.state().balance,0); assert.equal(m.regularAchievements.length,8); assert.equal(m.visibleProducts().length,9); assert.equal(m.startRound,undefined);
+ const {m}=boot(); assert.equal(m.state().version,9); assert.equal(m.state().balance,0); assert.equal(m.regularAchievements.length,8); assert.equal(m.visibleProducts().length,9); assert.equal(m.startRound,undefined);
 });
 test('all ten prices are five times the historical prices',()=>{const {m}=boot(); for(const p of m.products) assert.equal(p.price,p.legacyPrice*5); assert.equal(m.products.reduce((n,p)=>n+p.price,0),171000);});
 test('work requires seal then peel, survives reload and pays once',()=>{const b=boot(); assert.throws(()=>b.m.workStep('peel')); b.m.workStep('seal');assert.equal(b.m.workStep('peel'),null);b.advance();const next=boot({map:b.map,now:Date.now()+1000}).m;assert.equal(next.workStep('peel').amount,10);assert.throws(()=>b.m.workStep('peel'));assert.equal(b.m.state().balance,10);});
@@ -190,7 +190,7 @@ test('v5 migration retires old honors without inventing rank income or changing 
   s.membership = { planId: 'gold', since: s.lastUsed }; s.membershipCredit = 5000;
   s.unlocked = ['first', 'planned', 'return', 'master', 'worker'];
   const migrated = boot({ map: new Map([[KEY, JSON.stringify(s)]]) }).m;
-  assert.equal(migrated.corrupt, false); assert.equal(migrated.state().version, 8);
+  assert.equal(migrated.corrupt, false); assert.equal(migrated.state().version, 9);
   assert.equal(migrated.state().balance, 4321); assert.equal(migrated.state().totalSpent, 7000);
   assert.equal(migrated.state().earnedTotal, 200000); assert.equal(migrated.workRate(), 50);
   assert.equal(Object.values(migrated.state().earnedByPlan).reduce((a, v) => a + v, 0), 0);
@@ -291,4 +291,62 @@ test('v6 migration retains in-progress work and existing income; invalid envelop
   const bad = b.m.state(); bad.workEnvelope = 'unknown'; const raw = JSON.stringify(bad);
   const badMap = new Map([[KEY, raw]]), invalid = boot({ map: badMap });
   assert.equal(invalid.m.corrupt, true); assert.equal(badMap.get(KEY), raw);
+});
+
+
+test('second lap requires full completion, resets every game record and retains only lap and crest', () => {
+  const b=boot(); assert.throws(()=>b.m.startSecondLap(), /完全クリア/);
+  collectRegular(b); memberIncome(b); b.m.join('black'); b.m.setName('一期の名前'); b.m.buy('final-envelope');
+  const next=b.m.startSecondLap(); assert.equal(next.lap,2); assert.equal(next.lapCrest,true);
+  for (const key of ['balance','totalSpent','earnedTotal','membershipSpent','membershipCredit','workCount','sortingCount','sortingRemainder','workLastAt']) assert.equal(next[key],0,key);
+  for (const key of ['history','unlocked','paidPlans']) assert.equal(next[key].length,0,key);
+  assert.equal(next.profile.name,''); assert.equal(next.membership,null); assert.equal(next.completion,null); assert.equal(next.standardCompletion,null);
+  assert.equal(next.workPhase,'seal'); assert.equal(next.sortingPhase,'align'); assert.equal(next.workEnvelope,'normal');
+  assert.equal(boot({map:b.map}).m.workRate(),15); assert.throws(()=>b.m.startSecondLap());
+  assert.equal(b.m.collectionProgress().total,9); assert.equal(b.m.honorProgress().total,8);
+  b.m.clear(); const fresh=b.m.state(); assert.equal(fresh.lap,1); assert.equal(fresh.lapCrest,false); assert.equal(b.m.workRate(),10);
+});
+
+test('second lap multiplies normal rates only; black envelopes still pay exactly 500',()=>{
+  const b=boot(); collectRegular(b); memberIncome(b); b.m.buy('final-envelope'); b.m.startSecondLap();
+  assert.equal(cycle(b).peel.amount,15); own(b); fund(b,50000);
+  for (const [id,rate] of [['ordinary',30],['gold',75],['black',150]]) { b.m.join(id); assert.equal(cycle(b).peel.amount,rate); }
+  const s=b.m.state(); s.workEnvelope='black'; b.map.set(KEY,JSON.stringify(s)); assert.equal(cycle(b).peel.amount,500);
+  assert.equal(b.m.state().earnedByPlan.black,650); assert.equal(b.m.state().lapCrest,true);
+});
+
+test('sorting is BLACK only, ordered, throttled, and shares the work clock without changing restoration state',()=>{
+  const b=boot(); assert.throws(()=>b.m.sortingStep('align'), /BLACK/); own(b); fund(b,50000); b.m.join('black');
+  assert.throws(()=>b.m.sortingStep('scatter')); assert.equal(b.m.sortingStep('align').amount,0); assert.equal(b.m.sortingStep('scatter'),null);
+  b.advance(); b.m.leave(); assert.throws(()=>b.m.sortingStep('scatter'), /BLACK/); b.m.join('black');
+  const s=b.m.state(); s.workEnvelope='black'; s.workPhase='peel'; b.map.set(KEY,JSON.stringify(s));
+  assert.equal(b.m.sortingStep('scatter').amount,104); assert.equal(b.m.workStep('peel'),null);
+  const next=boot({map:b.map}).m.state(); assert.equal(next.workEnvelope,'black'); assert.equal(next.workPhase,'peel');
+  assert.equal(next.sortingCount,1); assert.equal(next.earnedByPlan.black,104); assert.equal(next.earnedTotal,104); assert.equal(next.workCount,1);
+});
+
+test('second-lap sorting carries half-yen across reloads and membership changes, and never rolls black envelopes',()=>{
+  const b=boot(); collectRegular(b); memberIncome(b); b.m.buy('final-envelope'); b.m.startSecondLap(); own(b); fund(b,50000); b.m.join('black');
+  const rewards=[];
+  for(let i=0;i<4;i++) {
+    b.advance(); b.m.sortingStep('align'); b.advance(); rewards.push(b.m.sortingStep('scatter').amount);
+    if(i===0) { assert.equal(boot({map:b.map}).m.state().sortingRemainder,50); b.m.leave(); b.m.join('black'); }
+  }
+  assert.equal(rewards.join(','),'153,154,153,154'); assert.equal(b.m.state().earnedByPlan.black,614);
+  assert.equal(b.m.state().workEnvelope,'normal'); assert.equal(b.m.state().workPhase,'seal'); assert.equal(b.m.state().sortingRemainder,0);
+});
+
+test('old v8 data migrates without granting a lap or changing paid plans, black envelope or cash',()=>{
+  const b=boot(); own(b); fund(b,50000); b.m.join('gold'); const s=b.m.state(); s.version=8; s.workEnvelope='black';
+  for (const key of ['lap','lapCrest','sortingPhase','sortingRemainder','sortingCount']) delete s[key];
+  const map=new Map([[KEY,JSON.stringify(s)]]), m=boot({map}).m;
+  assert.equal(m.corrupt,false); assert.equal(m.state().lap,1); assert.equal(m.state().lapCrest,false); assert.equal(m.state().balance,s.balance);
+  assert.equal(m.state().workEnvelope,'black'); assert.equal(m.state().paidPlans.join(','),'gold');
+});
+
+test('malformed lap or fractional-work data is protected instead of discarded',()=>{
+  for(const change of [s=>s.lap=3,s=>s.lapCrest=true,s=>s.sortingRemainder=100,s=>s.sortingRemainder=.5,s=>s.sortingCount=1,s=>s.sortingPhase='peel']) {
+    const s=boot().m.state(); change(s); const raw=JSON.stringify(s), map=new Map([[KEY,raw]]);
+    assert.equal(boot({map}).m.corrupt,true); assert.equal(map.get(KEY),raw);
+  }
 });
