@@ -76,11 +76,11 @@ test('BLACK sorting uses right/up gestures, preserves both jobs and rejects clic
   const h=harness(), key='muda-shokai:v1', s=h.m.state();
   s.history=h.m.products.slice(0,3).map((p,i)=>({id:'IS-TEST-'+i,productId:p.id,price:p.price,date:s.lastUsed})); s.totalSpent=s.history.reduce((n,p)=>n+p.price,0); s.balance=20000;
   h.map.set(key,JSON.stringify(s)); h.m.join('black');
-  h.nodes.get('job-sort').fire('click'); assert.equal(h.envelope.dataset.job,'sort'); assert.equal(h.envelope.dataset.phase,'align');
+  h.nodes.get('job-sort').fire('click'); assert.equal(h.nodes.get('manual-restore').hidden,true); assert.equal(h.nodes.get('manual-sort').hidden,false); assert.match(h.nodes.get('work-rate-description').textContent,/揃えて/); assert.equal(h.envelope.dataset.job,'sort'); assert.equal(h.envelope.dataset.phase,'align');
   h.envelope.fire('click'); drag(h,{clientX:30}); assert.equal(h.m.state().sortingPhase,'align');
   drag(h,{clientX:120}); h.advance(); assert.equal(h.m.state().sortingPhase,'scatter'); assert.equal(h.envelope.dataset.phase,'scatter');
   h.nodes.get('job-restore').fire('click'); drag(h,{clientX:120}); h.advance(); assert.equal(h.m.state().workPhase,'peel');
   h.nodes.get('job-sort').fire('click'); assert.equal(h.envelope.dataset.phase,'scatter'); drag(h,{clientY:-70});
   assert.equal(h.m.state().earnedTotal,104); assert.equal(h.m.state().workPhase,'peel'); assert.equal(h.envelope.dataset.kind,'normal');
-  h.m.leave(); assert.equal(h.envelope.dataset.job,'restore'); assert.equal(h.nodes.get('job-sort').disabled,true);
+  h.m.leave(); assert.equal(h.nodes.get('manual-restore').hidden,false); assert.equal(h.nodes.get('manual-sort').hidden,true); assert.match(h.nodes.get('work-rate-description').textContent,/糊で閉じて/); assert.equal(h.envelope.dataset.job,'restore'); assert.equal(h.nodes.get('job-sort').disabled,true);
 });

@@ -8,11 +8,17 @@
     const s = M.state();
     if (job === 'sort' && !M.canSort(s)) { cancelInput(); job = 'restore'; }
     const sorting = job === 'sort', phase = sorting ? s.sortingPhase : s.workPhase, sealed = ['peel', 'scatter'].includes(phase);
+    document.getElementById('manual-restore').hidden = sorting;
+    document.getElementById('manual-sort').hidden = !sorting;
+    document.getElementById('earn-heading').textContent = sorting ? '揃えて、散らして、元どおり。' : '閉じて、剥がして、元どおり。';
+    document.getElementById('earn-introduction').textContent = sorting ? 'ばらばらの封筒を、丁寧にひと束へ。そして、丁寧に散らす。整列の成果を残さないお仕事です。' : '空の封筒に糊を塗り、丁寧に封をする。そして、丁寧に剥がす。それが、弊社のお仕事です。';
+    document.getElementById('work-rate-description').textContent = sorting ? '揃えて、散らして、元どおり。黒封筒は出ず、1往復の完了で報酬が入ります。' : '糊で閉じて、剥がして、元どおり。完了時の会員ランクで単価が決まります。';
+    document.getElementById('sorting-pay-explanation').textContent = (s.lap === 2 ? '2周目は1往復153円・154円を交互にお支払いします。0.5円の端数は繰り越します。' : '1周目は1往復104円です。') + '報酬はBLACK会員の実績にも加算します。すべて架空の報酬です。';
     document.getElementById('job-sort').disabled = !M.canSort(s);
     for (const id of ['restore', 'sort']) { const button = document.getElementById('job-' + id); button.setAttribute('aria-pressed', String(job === id)); button.className = 'button ' + (job === id ? 'gold' : 'outline'); }
     document.getElementById('sort-access').textContent = M.canSort(s) ? '封筒整列係をご利用いただけます。切り替えても作業途中の状態は保存されます。' : '封筒整列係は現在BLACK会員の方にご案内します。';
     document.getElementById('work-title').textContent = sorting ? '封筒整列係。' : '封筒復元係。';
-    document.getElementById('work-lap-note').textContent = s.lap === 2 ? '第二期・徒労の継承 ／ 通常報酬1.5倍。黒封筒は500円のままです。' : '第一期・徒労のはじまり';
+    document.getElementById('work-lap-note').textContent = s.lap === 2 ? (sorting ? '第二期・徒労の継承 ／ 復元係の報酬上昇に合わせて整列係の単価も上がります。' : '第二期・徒労の継承 ／ 通常報酬1.5倍。黒封筒は500円のままです。') : '第一期・徒労のはじまり';
     envelope.dataset.job = job;
     envelope.setAttribute('aria-label', sorting ? '封筒整列の作業台。右へ揃え、上へ散らす' : '封筒復元の作業台。右へ糊付け、上へ開封');
     document.getElementById('gesture-hint').textContent = sorting ? '右へなぞって揃え、上へ引き上げて散らします。' : '右へなぞって糊付けし、上へ引き上げて開封します。';
