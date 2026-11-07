@@ -2,6 +2,8 @@
 
 サイトURL：**[https://1zuminmin.github.io/muda-ec-site/](https://1zuminmin.github.io/muda-ec-site/)**
 
+GitHubのユーザー名が入らない無料URLへの移行は、[Cloudflare Pagesの公開手順書](docs/CLOUDFLARE-PAGES.md)を参照してください。
+
 「あなたのお金を、全力で無駄にする場所」。架空の所持金を稼ぎ、無用な品を集める無料のジョークサイトです。実際の支払い・入金・換金・配送・継続課金はありません。
 
 ## 起動方法
