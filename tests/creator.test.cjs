@@ -65,7 +65,7 @@ test('only completion shares mention the configured author and disclose the opt-
   const completed = render(null, true);
   const share = new URL(completed.M.summaryShareURL());
   assert.match(share.searchParams.get('text'), /@izuko_1231/);
-  assert.equal(share.searchParams.get('url'), 'https://1zuminmin.github.io/muda-ec-site/');
+  assert.equal(share.searchParams.get('url'), 'https://iminai-shokai.pages.dev/');
   assert.match(completed.node('collection-status').innerHTML, /掲載不要/);
   assert.match(completed.node('collection-status').innerHTML, /原則として/);
   assert.match(text(completed.M.shareURL({ productId: 'final-envelope', price: 100000 })), /@izuko_1231/);
@@ -85,7 +85,7 @@ test('app sharing is opt-in, uses the OS chooser and leaves the X web link as a 
   const button = { dataset: { shareApp: encodeURIComponent(r.M.summaryShareURL()) } };
   await r.events.click({ target: { closest: selector => selector === '[data-share-app]' ? button : null } });
   assert.equal(calls.length, 1); assert.match(calls[0].text, /@izuko_1231/);
-  assert.match(calls[0].text, /https:\/\/1zuminmin.github.io\/muda-ec-site\//);
+  assert.match(calls[0].text, /https:\/\/iminai-shokai\.pages\.dev\//);
   assert.equal(button.disabled, false);
   assert.match(r.node('collection-status').innerHTML, /twitter.com\/intent\/tweet/);
   assert.equal(render().M.appShareButton('https://example.com'), '');

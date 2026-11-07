@@ -1,8 +1,8 @@
 # 伊見内商会
 
-サイトURL：**[https://1zuminmin.github.io/muda-ec-site/](https://1zuminmin.github.io/muda-ec-site/)**
+サイトURL：**[https://iminai-shokai.pages.dev/](https://iminai-shokai.pages.dev/)**
 
-GitHubのユーザー名が入らない無料URLへの移行は、[Cloudflare Pagesの公開手順書](docs/CLOUDFLARE-PAGES.md)を参照してください。
+GitHubのユーザー名が入らないCloudflare Pagesで公開しています。設定方法は、[Cloudflare Pagesの公開手順書](docs/CLOUDFLARE-PAGES.md)を参照してください。
 
 「あなたのお金を、全力で無駄にする場所」。架空の所持金を稼ぎ、無用な品を集める無料のジョークサイトです。実際の支払い・入金・換金・配送・継続課金はありません。
 
@@ -144,9 +144,9 @@ git push -u origin codex/your-change
 
 別の場所で新規作成する場合は、Git管理がなければ `git init`。GitHubで空のリポジトリを作り、`git remote -v` で既存接続先を確認し、originがなければ `git remote add origin https://github.com/YOUR_NAME/YOUR_REPO.git` で接続します。現在のブランチ名は `git branch --show-current` で確認できます。強制pushは不要です。
 
-## 無料ホスティング（GitHub Pages）
+## 無料ホスティング（Cloudflare Pages）
 
-リポジトリの **Settings → Pages → Build and deployment → Deploy from a branch** で公開対象ブランチと **/(root)** を指定します。ビルド不要で、相対パスのためプロジェクト配下でも動きます。GitHub Freeでの利用は公開リポジトリを使います。最新版の[GitHub Pages公式手順](https://docs.github.com/en/pages/quickstart)を確認してください。サイト公開は今回の作業に含めていません。
+公開先は https://iminai-shokai.pages.dev/ です。Cloudflare PagesでGitHubリポジトリを連携し、本番ブランチ `codex/muda-shop-initial`、フレームワーク `None`、ビルドコマンド `exit 0`、出力先 `.` で配信します。本番ブランチへのpush後にCloudflare側のデプロイ成功を確認してください。詳細は [公開手順書](docs/CLOUDFLARE-PAGES.md) を参照してください。旧GitHub Pagesの停止は別途設定が必要です。
 
 ## 次に追加できること
 
@@ -154,6 +154,6 @@ git push -u origin codex/your-change
 
 ## 将来の広告について
 
-詳しい移転設定と申請手順は [docs/PUBLISHING.md](docs/PUBLISHING.md) にまとめています。GitHubでのソース管理を維持したまま公開先だけ変更できます。現段階では広告コードの設置・公開先の変更・アカウント作成はしていません。
+詳しい移転設定と申請手順は [docs/PUBLISHING.md](docs/PUBLISHING.md) にまとめています。GitHubでのソース管理を維持したまま公開先だけ変更できます。現在はCloudflare Pagesで公開しています。広告コードは設置していません。
 
 導入時は[AdSenseプログラムポリシー](https://support.google.com/adsense/answer/48182?hl=ja)を確認してください。広告は商品・ゲーム操作と区別し、クリックを実績・報酬の条件にせず、誤タップを誘う配置を避けます。サイト内容の審査適合性、プライバシー情報・同意管理・問い合わせ窓口も確認してから導入します。現時点では広告はありません。

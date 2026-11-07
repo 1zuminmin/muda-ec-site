@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 async function boot({ complete = false, missing = false, supported = true, cancelled = false } = {}) {
   const nodes = new Map([...read('certificate.html').matchAll(/id="([^"]+)"/g)].map(m => [m[1], { addEventListener(t, fn) { this[t] = fn; } }]));
-  const artifact = { blob: new Blob(['png'], { type: 'image/png' }), filename: '認定証.png', title: '認定証', shareURL: 'https://twitter.com/intent/tweet?text=%40izuko_1231&url=https%3A%2F%2F1zuminmin.github.io%2Fmuda-ec-site%2F' };
+  const artifact = { blob: new Blob(['png'], { type: 'image/png' }), filename: '認定証.png', title: '認定証', shareURL: 'https://twitter.com/intent/tweet?text=%40izuko_1231&url=https%3A%2F%2Fiminai-shokai.pages.dev%2F' };
   const calls = [], revoked = [], window = new EventTarget();
   class URLs extends URL { static createObjectURL() { return 'blob:certificate'; } static revokeObjectURL(url) { revoked.push(url); } }
   const M = { state: () => ({ history: missing ? [] : [{ id: 'TEST-1' }] }), createCertificate: async () => artifact, createCompletion: async () => artifact, completionShareNotice: '掲載不要と記載できます。' };
@@ -36,7 +36,7 @@ test('image sharing happens only on a click, includes the public URL and mention
   assert.match(b.get('certificate-share-note').textContent, /掲載不要/);
   await b.get('certificate-share').click();
   assert.equal(b.calls.length, 1); assert.equal(b.calls[0].files[0].type, 'image/png');
-  assert.match(b.calls[0].text, /@izuko_1231/); assert.match(b.calls[0].text, /https:\/\/1zuminmin.github.io\/muda-ec-site\//);
+  assert.match(b.calls[0].text, /@izuko_1231/); assert.match(b.calls[0].text, /https:\/\/iminai-shokai\.pages\.dev\//);
   const cancelled = await boot({ cancelled: true }); await cancelled.get('certificate-share').click();
   assert.match(cancelled.get('certificate-status').textContent, /キャンセル/);
   assert.equal(cancelled.get('certificate-share').disabled, false);

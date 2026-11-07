@@ -4,7 +4,7 @@
 
 公開URLを `https://iminai-shokai.pages.dev/` のような形にする手順です。名前は空き状況によります。`pages.dev` の無料サブドメインを使うため、独自ドメインの購入は不要です。GitHubはこれまでどおりコードの保存に使います。
 
-この手順書を作成した時点では、Cloudflareへの公開や旧サイトの停止は実行していません。
+2026年11月7日にユーザーが https://iminai-shokai.pages.dev/ で公開し、HTTP 200とサイトのタイトルを確認しました。X共有URL・README・配信サービスの説明も新URLに合わせて更新しています。旧GitHub Pagesの停止はこの作業では実行していません。以下は設定の再確認・再作成用の手順です。
 
 ## 1. Cloudflareに登録する
 
