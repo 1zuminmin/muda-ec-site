@@ -320,12 +320,12 @@ test('sorting is BLACK only, ordered, throttled, and shares the work clock witho
   assert.throws(()=>b.m.sortingStep('scatter')); assert.equal(b.m.sortingStep('align').amount,0); assert.equal(b.m.sortingStep('scatter'),null);
   b.advance(); b.m.leave(); assert.throws(()=>b.m.sortingStep('scatter'), /BLACK/); b.m.join('black');
   const s=b.m.state(); s.workEnvelope='black'; s.workPhase='peel'; b.map.set(KEY,JSON.stringify(s));
-  assert.equal(b.m.sortingStep('scatter').amount,150); assert.equal(b.m.workStep('peel'),null);
+  assert.equal(b.m.sortingStep('scatter').amount,1500); assert.equal(b.m.workStep('peel'),null);
   const next=boot({map:b.map}).m.state(); assert.equal(next.workEnvelope,'black'); assert.equal(next.workPhase,'peel');
-  assert.equal(next.sortingCount,1); assert.equal(next.earnedByPlan.black,150); assert.equal(next.earnedTotal,150); assert.equal(next.workCount,1);
+  assert.equal(next.sortingCount,1); assert.equal(next.earnedByPlan.black,1500); assert.equal(next.earnedTotal,1500); assert.equal(next.workCount,1);
 });
 
-test('second-lap sorting pays 225 after reloads and membership changes, retiring old half-yen balances',()=>{
+test('second-lap sorting pays 2250 after reloads and membership changes, retiring old half-yen balances',()=>{
   const b=boot(); collectRegular(b); memberIncome(b); b.m.buy('final-envelope'); b.m.startSecondLap(); own(b); fund(b,50000); b.m.join('black');
   const old=b.m.state(); old.sortingRemainder=50; b.map.set(KEY,JSON.stringify(old));
   const rewards=[];
@@ -333,7 +333,7 @@ test('second-lap sorting pays 225 after reloads and membership changes, retiring
     b.advance(); b.m.sortingStep('align'); b.advance(); rewards.push(b.m.sortingStep('scatter').amount);
     if(i===0) { assert.equal(boot({map:b.map}).m.state().sortingRemainder,0); b.m.leave(); b.m.join('black'); }
   }
-  assert.equal(rewards.join(','),'225,225,225,225'); assert.equal(b.m.state().earnedByPlan.black,900);
+  assert.equal(rewards.join(','),'2250,2250,2250,2250'); assert.equal(b.m.state().earnedByPlan.black,9000);
   assert.equal(b.m.state().workEnvelope,'normal'); assert.equal(b.m.state().workPhase,'seal'); assert.equal(b.m.state().sortingRemainder,0);
 });
 
@@ -349,5 +349,16 @@ test('malformed lap or fractional-work data is protected instead of discarded',(
   for(const change of [s=>s.lap=3,s=>s.lapCrest=true,s=>s.sortingRemainder=100,s=>s.sortingRemainder=.5,s=>s.sortingCount=1,s=>s.sortingPhase='peel']) {
     const s=boot().m.state(); change(s); const raw=JSON.stringify(s), map=new Map([[KEY,raw]]);
     assert.equal(boot({map}).m.corrupt,true); assert.equal(map.get(KEY),raw);
+  }
+});
+
+
+test('sorting and restoration share membership and second-lap multipliers, while sorting stays BLACK-only',()=>{
+  const b=boot(), s=b.m.state();
+  for(const lap of [1,2]) for(const [id,multiplier] of [[null,1],['ordinary',2],['gold',5],['black',10]]) {
+    const candidate={...s,lap,membership:id?{planId:id,since:s.lastUsed}:null};
+    assert.equal(b.m.sortingReward(candidate),150*multiplier*(lap===2?1.5:1));
+    assert.equal(b.m.sortingReward(candidate)/b.m.workRate(candidate),15);
+    assert.equal(b.m.canSort(candidate),id==='black');
   }
 });
