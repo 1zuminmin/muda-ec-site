@@ -351,3 +351,16 @@ test('malformed lap or fractional-work data is protected instead of discarded',(
     assert.equal(boot({map}).m.corrupt,true); assert.equal(map.get(KEY),raw);
   }
 });
+
+
+test('BLACK income honor combines restoration and sorting income and unlocks once at 50000',()=>{
+  const b=boot(); own(b); fund(b,50000); b.m.join('black'); memberIncome(b,49900);
+  assert.equal(b.m.state().unlocked.includes('black-worker'),false);
+  assert.equal(b.m.sortingStep('align').amount,0); b.advance();
+  const result=b.m.sortingStep('scatter'); assert.equal(result.amount,150);
+  assert.equal(b.m.state().earnedByPlan.black,50050);
+  assert.equal(result.newly.filter(a=>a.id==='black-worker').length,1);
+  assert.equal(b.m.state().earnedByPlan.ordinary,10000); assert.equal(b.m.state().earnedByPlan.gold,25000);
+  const reloaded=boot({map:b.map,now:Date.now()+10000}); assert.equal(reloaded.m.state().unlocked.includes('black-worker'),true);
+  reloaded.m.sortingStep('align'); reloaded.advance(); assert.equal(reloaded.m.sortingStep('scatter').newly.some(a=>a.id==='black-worker'),false);
+});

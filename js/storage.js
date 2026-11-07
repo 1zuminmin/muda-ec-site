@@ -18,11 +18,11 @@
   const achievements = Object.freeze([
     { id: 'first', name: '初めての後悔', description: '初めて商品を購入する', target: 1, type: 'count', symbol: 'Ⅰ' },
     { id: 'planned', name: '計画的な浪費', description: '累計500円を無駄にする', target: 500, type: 'spent', symbol: 'Ⅱ' },
-    { id: 'red-worker', name: '正会員の徒労', description: 'RED会員として内職で10,000円を稼ぐ（1周目単価500往復相当）', target: 10000, type: 'member-earned', planId: 'ordinary', symbol: 'Ⅲ' },
-    { id: 'gold-worker', name: '特別会員の徒労', description: 'GOLD会員として内職で25,000円を稼ぐ（1周目単価500往復相当）', target: 25000, type: 'member-earned', planId: 'gold', symbol: 'Ⅳ' },
+    { id: 'red-worker', name: '正会員の徒労', description: 'RED会員として内職で10,000円を稼ぐ', target: 10000, type: 'member-earned', planId: 'ordinary', symbol: 'Ⅲ' },
+    { id: 'gold-worker', name: '特別会員の徒労', description: 'GOLD会員として内職で25,000円を稼ぐ', target: 25000, type: 'member-earned', planId: 'gold', symbol: 'Ⅳ' },
     { id: 'collection', name: '完全なる虚無', description: '異なる3種類の商品を購入する', target: 3, type: 'unique', symbol: 'Ⅴ' },
     { id: 'ultimate', name: '無駄遣いの極致', description: '累計10,000円を無駄にする', target: 10000, type: 'spent', symbol: 'Ⅵ' },
-    { id: 'black-worker', name: '名誉会員の徒労', description: 'BLACK会員として内職で50,000円を稼ぐ（1周目単価500往復相当）', target: 50000, type: 'member-earned', planId: 'black', symbol: 'Ⅶ' },
+    { id: 'black-worker', name: '名誉会員の徒労', description: 'BLACK会員として内職で50,000円を稼ぐ（復元係・整列係の合計）', target: 50000, type: 'member-earned', planId: 'black', symbol: 'Ⅶ' },
     { id: 'regular', name: 'お得意様', description: '通常9種類の商品を購入する', target: regularProducts.length, type: 'regular', symbol: 'Ⅷ' },
     { id: 'complete', name: '真の無駄使いyer', description: '特別なご案内を含む全10種類を購入する', target: products.length, type: 'unique', symbol: 'Ⅸ' }
   ]);
